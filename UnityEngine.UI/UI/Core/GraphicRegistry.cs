@@ -20,6 +20,9 @@ namespace UnityEngine.UI
 
             // See: 877060
 
+            //避免运行时生成这些类型。有些平台只支持AOT（预先编译），不支持 JIT（实时编译）。
+            //更重要的是，我们实际上创建了所需类型的实例，而不是只是声明一个未使用的变量，可能会被一些编译器优化掉(Mono vs MS)。
+
             System.GC.KeepAlive(new Dictionary<Graphic, int>());
             System.GC.KeepAlive(new Dictionary<ICanvasElement, int>());
             System.GC.KeepAlive(new Dictionary<IClipper, int>());

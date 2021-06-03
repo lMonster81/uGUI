@@ -279,8 +279,9 @@ namespace UnityEngine.UI
                 {
                     if (m_Sprite != value)
                     {
-                        m_SkipLayoutUpdate = m_Sprite.rect.size.Equals(value ? value.rect.size : Vector2.zero);
-                        m_SkipMaterialUpdate = m_Sprite.texture == (value ? value.texture : null);
+                        //sprite变化了
+                        m_SkipLayoutUpdate = m_Sprite.rect.size.Equals(value ? value.rect.size : Vector2.zero); //若大小未变化，跳过Layout更新
+                        m_SkipMaterialUpdate = m_Sprite.texture == (value ? value.texture : null); //若纹理未变化，跳过Material更新 （sprite是在一张大的texture上采样）
                         m_Sprite = value;
 
                         SetAllDirty();

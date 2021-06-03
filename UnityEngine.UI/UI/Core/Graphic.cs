@@ -80,11 +80,12 @@ namespace UnityEngine.UI
         : UIBehaviour,
           ICanvasElement
     {
-        static protected Material s_DefaultUI = null;
-        static protected Texture2D s_WhiteTexture = null;
+        static protected Material s_DefaultUI = null;       //默认UI材质，Canvas.GetDefaultCanvasMaterial()
+        static protected Texture2D s_WhiteTexture = null;   //默认空白贴图，Texture2D.whiteTexture
 
         /// <summary>
         /// Default material used to draw UI elements if no explicit material was specified.
+        /// 如果没有明确指定材质，则默认材质用于绘制UI元素
         /// </summary>
 
         static public Material defaultGraphicMaterial
@@ -99,12 +100,12 @@ namespace UnityEngine.UI
 
         // Cached and saved values
         [FormerlySerializedAs("m_Mat")]
-        [SerializeField] protected Material m_Material;
+        [SerializeField] protected Material m_Material;         //当前材质
 
-        [SerializeField] private Color m_Color = Color.white;
+        [SerializeField] private Color m_Color = Color.white;   //当前颜色
 
-        [NonSerialized] protected bool m_SkipLayoutUpdate;
-        [NonSerialized] protected bool m_SkipMaterialUpdate;
+        [NonSerialized] protected bool m_SkipLayoutUpdate;      //是否跳过Layout更新，置为true后本帧内有效，执行跳过后立刻置回false。
+        [NonSerialized] protected bool m_SkipMaterialUpdate;    //是否跳过材质更新，置为true后本帧内有效，执行跳过后立刻置回false。
 
         /// <summary>
         /// Base color of the Graphic.
@@ -151,34 +152,33 @@ namespace UnityEngine.UI
         /// </example>
         public virtual Color color { get { return m_Color; } set { if (SetPropertyUtility.SetColor(ref m_Color, value)) SetVerticesDirty(); } }
 
-        [SerializeField] private bool m_RaycastTarget = true;
+        [SerializeField] private bool m_RaycastTarget = true;   //是否作为射线检测目标
 
         /// <summary>
         /// Should this graphic be considered a target for raycasting?
         /// </summary>
         public virtual bool raycastTarget { get { return m_RaycastTarget; } set { m_RaycastTarget = value; } }
 
-        [NonSerialized] private RectTransform m_RectTransform;
-        [NonSerialized] private CanvasRenderer m_CanvasRenderer;
-        [NonSerialized] private Canvas m_Canvas;
+        [NonSerialized] private RectTransform m_RectTransform;      //与自身同级的、依赖的RectTransform
+        [NonSerialized] private CanvasRenderer m_CanvasRenderer;    //与自身同级的、依赖的CanvasRenderer
+        [NonSerialized] private Canvas m_Canvas;                    //自身所属的、第一个active和enabled均为true的Canvas，可为null
 
-        [NonSerialized] private bool m_VertsDirty;
-        [NonSerialized] private bool m_MaterialDirty;
+        [NonSerialized] private bool m_VertsDirty;                  //顶点脏标记
+        [NonSerialized] private bool m_MaterialDirty;               //材质脏标记
 
-        [NonSerialized] protected UnityAction m_OnDirtyLayoutCallback;
-        [NonSerialized] protected UnityAction m_OnDirtyVertsCallback;
-        [NonSerialized] protected UnityAction m_OnDirtyMaterialCallback;
+        [NonSerialized] protected UnityAction m_OnDirtyLayoutCallback;      //SetLayoutDirty() 被调用时触发该回调
+        [NonSerialized] protected UnityAction m_OnDirtyVertsCallback;       //SetVerticesDirty() 被调用时触发该回调
+        [NonSerialized] protected UnityAction m_OnDirtyMaterialCallback;    //SetMaterialDirty() 被调用时触发该回调
 
-        [NonSerialized] protected static Mesh s_Mesh;
+        [NonSerialized] protected static Mesh s_Mesh;       //默认创建的、所有UI元素共享的 Mesh，HideFlags.HideAndDontSave。（新Scene中保留，Hierarchy上隐藏）
         [NonSerialized] private static readonly VertexHelper s_VertexHelper = new VertexHelper();
 
-        [NonSerialized] protected Mesh m_CachedMesh;
-        [NonSerialized] protected Vector2[] m_CachedUvs;
+        [NonSerialized] protected Mesh m_CachedMesh;        //???
+        [NonSerialized] protected Vector2[] m_CachedUvs;    //???
         // Tween controls for the Graphic
-        [NonSerialized]
-        private readonly TweenRunner<ColorTween> m_ColorTweenRunner;
+        [NonSerialized] private readonly TweenRunner<ColorTween> m_ColorTweenRunner;    //颜色渐变动画运行器，用于执行颜色渐变/透明度渐变。
 
-        protected bool useLegacyMeshGeneration { get; set; }
+        protected bool useLegacyMeshGeneration { get; set; }        //是否使用旧的Mesh创建方式，默认为true。
 
         // Called by Unity prior to deserialization,
         // should not be called by users
@@ -199,6 +199,7 @@ namespace UnityEngine.UI
             // Optimization: Graphic layout doesn't need recalculation if
             // the underlying Sprite is the same size with the same texture.
             // (e.g. Sprite sheet texture animation)
+            //优化:如果基础精灵具有相同的大小和纹理，那么 Graphic layout 便不需要重新计算。
 
             if (m_SkipLayoutUpdate)
             {
@@ -274,6 +275,7 @@ namespace UnityEngine.UI
                 m_OnDirtyMaterialCallback();
         }
 
+        //重写 UIBehaviour的方法
         protected override void OnRectTransformDimensionsChange()
         {
             if (gameObject.activeInHierarchy)
@@ -289,12 +291,14 @@ namespace UnityEngine.UI
             }
         }
 
+        //重写 UIBehaviour的方法
         protected override void OnBeforeTransformParentChanged()
         {
             GraphicRegistry.UnregisterGraphicForCanvas(canvas, this);
             LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
         }
 
+        //重写 UIBehaviour的方法
         protected override void OnTransformParentChanged()
         {
             base.OnTransformParentChanged();
@@ -403,6 +407,7 @@ namespace UnityEngine.UI
 
         /// <summary>
         /// Returns the default material for the graphic.
+        /// 本Graphic默认采用的材质，默认为defaultGraphicMaterial（可重写）
         /// </summary>
         public virtual Material defaultMaterial
         {
@@ -411,6 +416,7 @@ namespace UnityEngine.UI
 
         /// <summary>
         /// The Material set by the user
+        /// 当前材质set/get。set时触发SetMaterialDirty(); get时若为空则取defaultMaterial（可重写）
         /// </summary>
         public virtual Material material
         {
@@ -433,6 +439,7 @@ namespace UnityEngine.UI
         /// </summary>
         /// <remarks>
         /// This is the material that actually gets sent to the CanvasRenderer. By default it's the same as [[Graphic.material]]. When extending Graphic you can override this to send a different material to the CanvasRenderer than the one set by Graphic.material. This is useful if you want to modify the user set material in a non destructive manner.
+        /// 实际被发送到CanvasRenderer的、被 IMaterialModifier 修改后的材质。（可重写）
         /// </remarks>
         public virtual Material materialForRendering
         {
@@ -522,7 +529,7 @@ namespace UnityEngine.UI
             m_Canvas = null;
 
             if (!IsActive())
-                return;
+                return;  
 
             CacheCanvas();
 
@@ -552,6 +559,7 @@ namespace UnityEngine.UI
             }
         }
 
+        //实现 ICanvasElement 的接口
         /// <summary>
         /// Rebuilds the graphic geometry and its material on the PreRender cycle.
         /// </summary>
@@ -581,9 +589,11 @@ namespace UnityEngine.UI
             }
         }
 
+        //实现 ICanvasElement 的接口
         public virtual void LayoutComplete()
         {}
 
+        //实现 ICanvasElement 的接口
         public virtual void GraphicUpdateComplete()
         {}
 
@@ -726,6 +736,9 @@ namespace UnityEngine.UI
             // and associated components... The correct way to do this is by
             // calling OnValidate... Because MB's don't have a common base class
             // we do this via reflection. It's nasty and ugly... Editor only.
+            //当重建被请求时，我们需要重建所有的graphics和相关组件…
+            //做这件事的正确方法是调用OnValidate……
+            //但因为MonoBehaviour没有公共基类,所以通过反射来实现。又脏又丑……仅编辑器下。
             var mbs = gameObject.GetComponents<MonoBehaviour>();
             foreach (var mb in mbs)
             {

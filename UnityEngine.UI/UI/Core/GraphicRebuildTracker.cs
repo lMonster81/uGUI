@@ -21,6 +21,9 @@ namespace UnityEngine.UI
         {
             if (!s_Initialized)
             {
+                //文档：https://docs.unity3d.com/ScriptReference/CanvasRenderer-onRequestRebuild.html
+                //每当CanvasRenderer中的数据失效并需要重建时触发的事件(仅编辑器)。
+                //例如，每当一个纹理被重新导入时，这个事件就会被触发。
                 CanvasRenderer.onRequestRebuild += OnRebuildRequested;
                 s_Initialized = true;
             }
