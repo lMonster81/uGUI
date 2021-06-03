@@ -163,8 +163,8 @@ namespace UnityEngine.UI
         [NonSerialized] private CanvasRenderer m_CanvasRenderer;    //与自身同级的、依赖的CanvasRenderer
         [NonSerialized] private Canvas m_Canvas;                    //自身所属的、第一个active和enabled均为true的Canvas，可为null
 
-        [NonSerialized] private bool m_VertsDirty;                  //顶点脏标记
-        [NonSerialized] private bool m_MaterialDirty;               //材质脏标记
+        [NonSerialized] private bool m_VertsDirty;       //顶点脏标记，默认false, SetVerticesDirty()置为true, Rebuild()中UpdateGeometry()执行后置回false
+        [NonSerialized] private bool m_MaterialDirty;    //材质脏标记，默认false, SetVerticesDirty()置为true, Rebuild()中UpdateMaterial()执行后置回false
 
         [NonSerialized] protected UnityAction m_OnDirtyLayoutCallback;      //SetLayoutDirty() 被调用时触发该回调
         [NonSerialized] protected UnityAction m_OnDirtyVertsCallback;       //SetVerticesDirty() 被调用时触发该回调
@@ -201,6 +201,7 @@ namespace UnityEngine.UI
             // (e.g. Sprite sheet texture animation)
             //优化:如果基础精灵具有相同的大小和纹理，那么 Graphic layout 便不需要重新计算。
 
+            //能跳过的过程尽量跳过
             if (m_SkipLayoutUpdate)
             {
                 m_SkipLayoutUpdate = false;
@@ -275,7 +276,8 @@ namespace UnityEngine.UI
                 m_OnDirtyMaterialCallback();
         }
 
-        //重写 UIBehaviour的方法
+        //重写 UIBehaviour 的方法
+        //RectTransform大小发生变化，标记顶点脏（需要重新创建Mesh）、标记重新布局。
         protected override void OnRectTransformDimensionsChange()
         {
             if (gameObject.activeInHierarchy)
@@ -291,14 +293,16 @@ namespace UnityEngine.UI
             }
         }
 
-        //重写 UIBehaviour的方法
+        //重写 UIBehaviour 的方法
+        //父物体改变前，先移除GraphicRegistry的注册、标记重新布局。
         protected override void OnBeforeTransformParentChanged()
         {
             GraphicRegistry.UnregisterGraphicForCanvas(canvas, this);
             LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
         }
 
-        //重写 UIBehaviour的方法
+        //重写 UIBehaviour 的方法
+        //父物体改变时，先移除GraphicRegistry的注册、标记重新布局。
         protected override void OnTransformParentChanged()
         {
             base.OnTransformParentChanged();
