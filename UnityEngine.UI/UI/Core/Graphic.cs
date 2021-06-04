@@ -173,8 +173,8 @@ namespace UnityEngine.UI
         [NonSerialized] protected static Mesh s_Mesh;       //默认创建的、所有UI元素共享的 Mesh，HideFlags.HideAndDontSave。（新Scene中保留，Hierarchy上隐藏）
         [NonSerialized] private static readonly VertexHelper s_VertexHelper = new VertexHelper();
 
-        [NonSerialized] protected Mesh m_CachedMesh;        //???
-        [NonSerialized] protected Vector2[] m_CachedUvs;    //???
+        [NonSerialized] protected Mesh m_CachedMesh;        //疑问??? 没找到任何引用
+        [NonSerialized] protected Vector2[] m_CachedUvs;    //疑问??? 没找到任何引用
         // Tween controls for the Graphic
         [NonSerialized] private readonly TweenRunner<ColorTween> m_ColorTweenRunner;    //颜色渐变动画运行器，用于执行颜色渐变/透明度渐变。
 
@@ -182,6 +182,8 @@ namespace UnityEngine.UI
 
         // Called by Unity prior to deserialization,
         // should not be called by users
+        // 疑问??? 继承自Monobehaviour的类 构造函数?
+        // 创建 m_ColorTweenRunner，默认 useLegacyMeshGeneration为true。
         protected Graphic()
         {
             if (m_ColorTweenRunner == null)
@@ -277,7 +279,9 @@ namespace UnityEngine.UI
         }
 
         //重写 UIBehaviour 的方法
-        //RectTransform大小发生变化，标记顶点脏（需要重新创建Mesh）、标记重新布局。
+        //RectTransform大小发生变化时（具体看UIBehaviour里的注释），
+        //1、标记顶点脏（需要重新创建自身Mesh）。
+        //2、标记布局脏（会导致布局改变）。
         protected override void OnRectTransformDimensionsChange()
         {
             if (gameObject.activeInHierarchy)
@@ -294,7 +298,9 @@ namespace UnityEngine.UI
         }
 
         //重写 UIBehaviour 的方法
-        //父物体改变前，先移除GraphicRegistry的注册、标记重新布局。
+        //父物体改变前（具体看UIBehaviour里的注释），
+        //1、清除GraphicRegistry中的注册（使原位置射线检测失效）。
+        //2、标记重新布局（会导致布局改变）（不会触发布局为脏回调）。
         protected override void OnBeforeTransformParentChanged()
         {
             GraphicRegistry.UnregisterGraphicForCanvas(canvas, this);
@@ -302,7 +308,10 @@ namespace UnityEngine.UI
         }
 
         //重写 UIBehaviour 的方法
-        //父物体改变时，先移除GraphicRegistry的注册、标记重新布局。
+        //父物体改变后（具体看UIBehaviour里的注释），
+        //1、清除缓存的 m_Canvas 并重新查找和缓存（因为位置变了，所属Canvas可能变化）。
+        //2、在GraphicRegistry中注册。（使新位置射线检测生效）。
+        //3、标记为全脏。
         protected override void OnTransformParentChanged()
         {
             base.OnTransformParentChanged();
@@ -478,12 +487,16 @@ namespace UnityEngine.UI
             }
         }
 
-        /// <summary>
-        /// Mark the Graphic and the canvas as having been changed.
-        /// </summary>
+        // Mark the Graphic and the canvas as having been changed.
+        // 标记 Graphic 和 Canvas 已改变。
+        //1、查找和缓存 m_Canvas。
+        //2、在 GraphicRegistry 中注册。（使射线检测生效）
+        //3、在 GraphicRebuildTracker 追踪。（仅编辑器下）
+        //4、为 s_WhiteTexture 设置初始值 Texture2D.whiteTexture。
+        //5、标记为全脏。
         protected override void OnEnable()
         {
-            base.OnEnable();
+            base.OnEnable(); //疑问??? 父方法是空的为何要调？
             CacheCanvas();
             GraphicRegistry.RegisterGraphicForCanvas(canvas, this);
 
@@ -496,9 +509,13 @@ namespace UnityEngine.UI
             SetAllDirty();
         }
 
-        /// <summary>
-        /// Clear references.
-        /// </summary>
+        // Clear references.
+        // 清除引用
+        //1、清除 GraphicRebuildTracker 追踪。（仅编辑器下）
+        //2、清除 GraphicRegistry 中的注册。
+        //3、清除 CanvasUpdateRegistry 中的注册。
+        //4、清理 canvasRenderer。
+        //5、标记重新布局（会导致布局改变）（不会触发布局为脏回调）。
         protected override void OnDisable()
         {
 #if UNITY_EDITOR
@@ -515,6 +532,7 @@ namespace UnityEngine.UI
             base.OnDisable();
         }
 
+        //1、销毁缓存的 Mesh???
         protected override void OnDestroy()
         {
             if (m_CachedMesh)
@@ -524,6 +542,10 @@ namespace UnityEngine.UI
             base.OnDestroy();
         }
 
+        //重写 UIBehaviour 的方法
+        //当关联的 Canvas 在 Hierarchy 上变化时（具体看UIBehaviour里的注释），
+        //1、清除缓存的 m_Canvas 并重新查找和缓存。
+        //2、若新的 Canvas 与原来的不同，更新GraphicRegistry中注册（更新射线的检测）。
         protected override void OnCanvasHierarchyChanged()
         {
             // Use m_Cavas so we dont auto call CacheCanvas
@@ -564,13 +586,10 @@ namespace UnityEngine.UI
         }
 
         //实现 ICanvasElement 的接口
-        /// <summary>
-        /// Rebuilds the graphic geometry and its material on the PreRender cycle.
-        /// </summary>
-        /// <param name="update">The current step of the rendering CanvasUpdate cycle.</param>
-        /// <remarks>
-        /// See CanvasUpdateRegistry for more details on the canvas update cycle.
-        /// </remarks>
+        // Rebuilds the graphic geometry and its material on the PreRender cycle.
+        // 在 CanvasUpdate 的 PreRender 阶段重建图形几何 和 材质
+        //1、顶点脏则更新图形几何
+        //2、材质脏则更新材质
         public virtual void Rebuild(CanvasUpdate update)
         {
             if (canvasRenderer == null || canvasRenderer.cull)
@@ -601,9 +620,11 @@ namespace UnityEngine.UI
         public virtual void GraphicUpdateComplete()
         {}
 
-        /// <summary>
-        /// Call to update the Material of the graphic onto the CanvasRenderer.
-        /// </summary>
+        // Call to update the Material of the graphic onto the CanvasRenderer.
+        // 将 Graphic 的 Material 更新至 CanvasRenderer 上。
+        //1、设置 canvasRenderer 的材质数量为1。
+        //2、设置 canvasRenderer 的材质为 materialForRendering （经过修改的最终材质）。
+        //3、设置 canvasRenderer 的 Texture 为 Graphic 的 mainTexture。
         protected virtual void UpdateMaterial()
         {
             if (!IsActive())
@@ -614,9 +635,8 @@ namespace UnityEngine.UI
             canvasRenderer.SetTexture(mainTexture);
         }
 
-        /// <summary>
-        /// Call to update the geometry of the Graphic onto the CanvasRenderer.
-        /// </summary>
+        // Call to update the geometry of the Graphic onto the CanvasRenderer.
+        // 将 Graphic 的 Mesh 更新至 CanvasRenderer 上。
         protected virtual void UpdateGeometry()
         {
             if (useLegacyMeshGeneration)
@@ -648,11 +668,14 @@ namespace UnityEngine.UI
             canvasRenderer.SetMesh(workerMesh);
         }
 
+        //旧的 Mesh 创建方法
+        //1、rectTransform 存在 且宽高为正时才创建，否则调用 Mesh 的清理方法。
+        //2、调用 OnPopulateMesh 执行创建。
         private void DoLegacyMeshGeneration()
         {
             if (rectTransform != null && rectTransform.rect.width >= 0 && rectTransform.rect.height >= 0)
             {
-#pragma warning disable 618
+#pragma warning disable 618         //疑问??? 618是什么警告？
                 OnPopulateMesh(workerMesh);
 #pragma warning restore 618
             }
@@ -688,6 +711,7 @@ namespace UnityEngine.UI
                 return s_Mesh;
             }
         }
+
         [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         [Obsolete("Use OnPopulateMesh instead.", true)]
         protected virtual void OnFillVBO(System.Collections.Generic.List<UIVertex> vbo) {}
@@ -761,24 +785,25 @@ namespace UnityEngine.UI
 
 #endif
 
-        // Call from unity if animation properties have changed
-
+        //重写 UIBehaviour 的方法
+        //当动画属性变化时，方法被调用。
+        //1、标记为全脏。
         protected override void OnDidApplyAnimationProperties()
         {
             SetAllDirty();
         }
 
-        /// <summary>
-        /// Make the Graphic have the native size of its content.
-        /// </summary>
+
+        // Make the Graphic have the native size of its content.
+        // 使 Graphic 具有其内容本身的大小。
+        // 为子类设定的模板方法
         public virtual void SetNativeSize() {}
 
-        /// <summary>
-        /// When a GraphicRaycaster is raycasting into the scene it does two things. First it filters the elements using their RectTransform rect. Then it uses this Raycast function to determine the elements hit by the raycast.
-        /// </summary>
-        /// <param name="sp">Screen point being tested</param>
-        /// <param name="eventCamera">Camera that is being used for the testing.</param>
-        /// <returns>True if the provided point is a valid location for GraphicRaycaster raycasts.</returns>
+
+        // When a GraphicRaycaster is raycasting into the scene it does two things. First it filters the elements using their RectTransform rect. Then it uses this Raycast function to determine the elements hit by the raycast.
+        // 当GraphicRaycaster向场景进行光线投射时，它会做两件事。它使用 RectTransform 的 rect 来过滤元素。使用光线投射函数来确定光线投射的元素。
+        // 参数 "sp": Screen point being tested。被射线检测的屏幕坐标
+        // 参数 "eventCamera": Camera that is being used for the testing. 射线检测的事件相机
         public virtual bool Raycast(Vector2 sp, Camera eventCamera)
         {
             if (!isActiveAndEnabled)
@@ -787,24 +812,23 @@ namespace UnityEngine.UI
             var t = transform;
             var components = ListPool<Component>.Get();
 
-            bool ignoreParentGroups = false;
-            bool continueTraversal = true;
+            bool ignoreParentGroups = false;        //是否忽略父CanvasGroup
+            bool continueTraversal = true;          //是否继续遍历，若置为false，本次执行完后结束遍历
 
             while (t != null)
             {
-                t.GetComponents(components);
+                t.GetComponents(components);    //取所有组件
                 for (var i = 0; i < components.Count; i++)
                 {
-                    var canvas = components[i] as Canvas;
+                    var canvas = components[i] as Canvas;  
                     if (canvas != null && canvas.overrideSorting)
                         continueTraversal = false;
-
+                    
                     var filter = components[i] as ICanvasRaycastFilter;
-
                     if (filter == null)
-                        continue;
+                        continue;   //下面的步骤均依赖 ICanvasRaycastFilter
 
-                    var raycastValid = true;
+                    var raycastValid = true;    //射线检测是否有效
 
                     var group = components[i] as CanvasGroup;
                     if (group != null)
@@ -835,6 +859,8 @@ namespace UnityEngine.UI
         }
 
 #if UNITY_EDITOR
+        //编辑器下，脚本被加载、或 Inspector 中的任何值被修改时，方法被调用
+        //1、设为全脏
         protected override void OnValidate()
         {
             base.OnValidate();
@@ -890,6 +916,7 @@ namespace UnityEngine.UI
 
         ///<summary>
         ///Tweens the CanvasRenderer color associated with this Graphic.
+        ///用内置m_ColorTweenRunner执行颜色渐变（最终调用canvasRenderer.SetColor）
         ///</summary>
         ///<param name="targetColor">Target color.</param>
         ///<param name="duration">Tween duration.</param>
