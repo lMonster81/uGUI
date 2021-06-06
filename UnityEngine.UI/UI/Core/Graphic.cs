@@ -804,6 +804,12 @@ namespace UnityEngine.UI
         // 当GraphicRaycaster向场景进行光线投射时，它会做两件事。它使用 RectTransform 的 rect 来过滤元素。使用光线投射函数来确定光线投射的元素。
         // 参数 "sp": Screen point being tested。被射线检测的屏幕坐标
         // 参数 "eventCamera": Camera that is being used for the testing. 射线检测的事件相机
+        // 方法的目的：确定 本 Graphic 是否没射线检测到!!!
+        // 1、若未激活/启动，则直接返回false。
+        // 2、从当前 Graphic 开始向其父物体递归遍历检测，直到parent为null或被提前打断。
+        // 3、若当前物体存在一个“使用自己独立 SortOrder” 的 Canvas 组件，则使本次执行完后结束递归遍历（提前打断）。（NRatel原因/结论：检测以相同 SortOrder 为基准，对嵌套的 Canvas 分割断层。
+        // 4、若当前物体不存在一个“实现了接口 ICanvasRaycastFilter” 的组件，则跳过当前，继续检测其父物体。（NRatel原因/结论：不实现该接口的组件无法被射线检测到。
+        // 5、若当前物体存在一个“ignoreParentGroups == true” 的 CanvasGroup 组件，则在递归遍历过程中只检测当前 CanvasGroup 这一层。
         public virtual bool Raycast(Vector2 sp, Camera eventCamera)
         {
             if (!isActiveAndEnabled)
@@ -812,34 +818,45 @@ namespace UnityEngine.UI
             var t = transform;
             var components = ListPool<Component>.Get();
 
-            bool ignoreParentGroups = false;        //是否忽略父CanvasGroup
+            bool ignoreParentGroups = false;        //是否忽略了父CanvasGroup（这是一个保证仅一次的标志）
             bool continueTraversal = true;          //是否继续遍历，若置为false，本次执行完后结束遍历
 
             while (t != null)
             {
-                t.GetComponents(components);    //取所有组件
+                t.GetComponents(components);         //取所有组件
                 for (var i = 0; i < components.Count; i++)
                 {
                     var canvas = components[i] as Canvas;  
                     if (canvas != null && canvas.overrideSorting)
-                        continueTraversal = false;
-                    
+                        continueTraversal = false;  //若当前物体存在一个“使用自己独立 SortOrder” 的 Canvas 组件，则使本次执行完后结束递归遍历（提前打断）。
+
                     var filter = components[i] as ICanvasRaycastFilter;
                     if (filter == null)
-                        continue;   //下面的步骤均依赖 ICanvasRaycastFilter
+                        continue;                   //下面的步骤均依赖 ICanvasRaycastFilter。
 
-                    var raycastValid = true;    //射线检测是否有效
+                    var raycastValid = true;        //射线检测是否有效？
 
                     var group = components[i] as CanvasGroup;
                     if (group != null)
                     {
-                        if (ignoreParentGroups == false && group.ignoreParentGroups)
+                        //if (ignoreParentGroups == false && group.ignoreParentGroups)
+                        //{
+                        //    ignoreParentGroups = true;
+                        //    raycastValid = filter.IsRaycastLocationValid(sp, eventCamera);
+                        //}
+                        //else if (!ignoreParentGroups)
+                        //    raycastValid = filter.IsRaycastLocationValid(sp, eventCamera);
+
+                        //将这块代码等价替换，易于理解（NRatel）
+                        //若当前物体存在一个“ignoreParentGroups == true” 的 CanvasGroup 组件，则在递归遍历过程中只检测当前 CanvasGroup 这一层。
+                        if (!ignoreParentGroups)
                         {
-                            ignoreParentGroups = true;
-                            raycastValid = filter.IsRaycastLocationValid(sp, eventCamera);
+                            if (group.ignoreParentGroups)
+                            {
+                                ignoreParentGroups = true;
+                            }
+                            raycastValid = filter.IsRaycastLocationValid(sp, eventCamera); 
                         }
-                        else if (!ignoreParentGroups)
-                            raycastValid = filter.IsRaycastLocationValid(sp, eventCamera);
                     }
                     else
                     {
@@ -849,7 +866,7 @@ namespace UnityEngine.UI
                     if (!raycastValid)
                     {
                         ListPool<Component>.Release(components);
-                        return false;
+                        return false;               //可被检测（有ICanvasRaycastFilter），但未被检测到
                     }
                 }
                 t = continueTraversal ? t.parent : null;
