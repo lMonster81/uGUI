@@ -4,73 +4,48 @@ using UnityEngine.UI.Collections;
 
 namespace UnityEngine.UI
 {
-    /// <summary>
-    /// Values of 'update' called on a Canvas update.
-    /// </summary>
+    // Values of 'update' called on a Canvas update.
+    // 在Canvas更新时调用的“更新”的值。
+    // Canvas 更新的 6个阶段。
     public enum CanvasUpdate
     {
-        /// <summary>
-        /// Called before layout.
-        /// </summary>
-        Prelayout = 0,
-        /// <summary>
-        /// Called for layout.
-        /// </summary>
-        Layout = 1,
-        /// <summary>
-        /// Called after layout.
-        /// </summary>
-        PostLayout = 2,
-        /// <summary>
-        /// Called before rendering.
-        /// </summary>
-        PreRender = 3,
-        /// <summary>
-        /// Called late, before render.
-        /// </summary>
-        LatePreRender = 4,
-        /// <summary>
-        /// Max enum value. Always last.
-        /// </summary>
-        MaxUpdateValue = 5
+        Prelayout = 0,      //Called before layout. Layout前。
+        Layout = 1,         //Called for layout. Layout时。
+        PostLayout = 2,     // Called after layout. Layout后。
+        PreRender = 3,      //Called before rendering. Rendering前。
+        LatePreRender = 4,  //Called late, before render. Rendering后。
+        MaxUpdateValue = 5  // Max enum value. Always last. 最大值，总在最后。
     }
 
-    /// <summary>
-    /// This is an element that can live on a Canvas.
-    /// </summary>
+    // This is an element that can live on a Canvas.
+    // 这是一个可以存在于画布上的元素（实现这个接口）。
     public interface ICanvasElement
     {
-        /// <summary>
-        /// Rebuild the element for the given stage.
-        /// </summary>
-        /// <param name="executing">The current CanvasUpdate stage being rebuild.</param>
+        // Rebuild the element for the given stage.
+        // 对给定 CanvasUpdate stage 重建元素。
+        // 参数"executing"：给定的 CanvasUpdate stage。
         void Rebuild(CanvasUpdate executing);
 
-        /// <summary>
-        /// Get the transform associated with the ICanvasElement.
-        /// </summary>
+        // Get the transform associated with the ICanvasElement.
+        // 实现了 ICanvasElement 接口的元素的 Transform 组件。
         Transform transform { get; }
 
-        /// <summary>
-        /// Callback sent when this ICanvasElement has completed layout.
-        /// </summary>
+        // Callback sent when this ICanvasElement has completed layout.
+        // 当 ICanvasElement 完成 Layout 时触发回调。
         void LayoutComplete();
 
-        /// <summary>
-        /// Callback sent when this ICanvasElement has completed Graphic rebuild.
-        /// </summary>
+        // Callback sent when this ICanvasElement has completed Graphic rebuild.
+        // 当 ICanvasElement 完成图形重建时触发回调。
         void GraphicUpdateComplete();
 
-        /// <summary>
-        /// Used if the native representation has been destroyed.
-        /// </summary>
-        /// <returns>Return true if the element is considered destroyed.</returns>
+        // Used if the native representation has been destroyed.
+        // Return true if the element is considered destroyed.
+        // 如果该元素被认为已销毁，则返回true。
         bool IsDestroyed();
     }
 
-    /// <summary>
-    /// A place where CanvasElements can register themselves for rebuilding.
-    /// </summary>
+    // A place where CanvasElements can register themselves for rebuilding.
+    // 画布元素可以注册自己，进行重建的地方。
     public class CanvasUpdateRegistry
     {
         private static CanvasUpdateRegistry s_Instance;
