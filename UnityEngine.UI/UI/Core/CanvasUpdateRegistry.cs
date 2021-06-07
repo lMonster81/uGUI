@@ -5,8 +5,8 @@ using UnityEngine.UI.Collections;
 namespace UnityEngine.UI
 {
     // Values of 'update' called on a Canvas update.
-    // 在Canvas更新时调用的“更新”的值。
-    // Canvas 更新的 6个阶段。
+    // 在 Canvas 更新时调用的“更新”的值。
+    // Canvas 更新的 6个阶段。Layout3 + Render2 + Fninal1
     public enum CanvasUpdate
     {
         Prelayout = 0,      //Called before layout. Layout前。
@@ -18,7 +18,8 @@ namespace UnityEngine.UI
     }
 
     // This is an element that can live on a Canvas.
-    // 这是一个可以存在于画布上的元素（实现这个接口）。
+    // 这是一个可以存在于画布上的元素
+    // 实现这个接口的元素即为“画布元素”。
     public interface ICanvasElement
     {
         // Rebuild the element for the given stage.
@@ -45,25 +46,28 @@ namespace UnityEngine.UI
     }
 
     // A place where CanvasElements can register themselves for rebuilding.
-    // 画布元素可以注册自己，进行重建的地方。
+    // 画布元素可以注册自己进行重建的地方。
     public class CanvasUpdateRegistry
     {
-        private static CanvasUpdateRegistry s_Instance;
+        private static CanvasUpdateRegistry s_Instance;     //单例实例
 
-        private bool m_PerformingLayoutUpdate;
-        private bool m_PerformingGraphicUpdate;
+        private bool m_PerformingLayoutUpdate;      //正在执行 LayoutUpdate 的标志
+        private bool m_PerformingGraphicUpdate;     //正在执行 GraphicUpdate  的标志
 
         private readonly IndexedSet<ICanvasElement> m_LayoutRebuildQueue = new IndexedSet<ICanvasElement>();
         private readonly IndexedSet<ICanvasElement> m_GraphicRebuildQueue = new IndexedSet<ICanvasElement>();
 
         protected CanvasUpdateRegistry()
         {
-            Canvas.willRenderCanvases += PerformUpdate;
+            // 注册事件 Canvas.willRenderCanvases，用来触发更新。（这是更新/重建的源动力）
+            // Canvas.willRenderCanvases：https://docs.unity3d.com/cn/2020.1/ScriptReference/Canvas-willRenderCanvases.html
+            //    在即将开始 Canvas 渲染前调用的事件。
+            //    这让您能够延时处理 /更新基于画布的元素，直到即将开始渲染它们时。  
+            Canvas.willRenderCanvases += PerformUpdate; 
         }
 
-        /// <summary>
-        /// Get the singleton registry instance.
-        /// </summary>
+        // Get the singleton registry instance.
+        // 获取单例
         public static CanvasUpdateRegistry instance
         {
             get
@@ -233,11 +237,14 @@ namespace UnityEngine.UI
             return instance.InternalRegisterCanvasElementForLayoutRebuild(element);
         }
 
+        // 内部私有，添加 LayoutRebuild 注册
+        // 1、检查确保不在 LayoutRebuild 队列中。 //注意：这里未使用 m_PerformingLayoutUpdate 判断。因为在调整游戏视图大小时会导致显示错误。
+        // 2、加入 LayoutRebuild 队列。
         private bool InternalRegisterCanvasElementForLayoutRebuild(ICanvasElement element)
         {
             if (m_LayoutRebuildQueue.Contains(element))
                 return false;
-
+            
             /* TODO: this likely should be here but causes the error to show just resizing the game view (case 739376)
             if (m_PerformingLayoutUpdate)
             {
@@ -248,11 +255,10 @@ namespace UnityEngine.UI
             return m_LayoutRebuildQueue.AddUnique(element);
         }
 
-        /// <summary>
-        /// Try and add the given element to the rebuild list.
-        /// Will not return if successfully added.
-        /// </summary>
-        /// <param name="element">The element that is needing rebuilt.</param>
+       
+        // Try and add the given element to the rebuild list. Will not return if successfully added.
+        // 
+        // 参数 "element"：The element that is needing rebuilt. 需要重建的元素。
         public static void RegisterCanvasElementForGraphicRebuild(ICanvasElement element)
         {
             instance.InternalRegisterCanvasElementForGraphicRebuild(element);
@@ -271,6 +277,9 @@ namespace UnityEngine.UI
             return instance.InternalRegisterCanvasElementForGraphicRebuild(element);
         }
 
+        // 内部私有，添加 GraphicRebuild 注册
+        // 1、检查确保 GraphicUpdate 不是正在进行。
+        // 2、加入 GraphicUpdate 队列。
         private bool InternalRegisterCanvasElementForGraphicRebuild(ICanvasElement element)
         {
             if (m_PerformingGraphicUpdate)
@@ -292,6 +301,10 @@ namespace UnityEngine.UI
             instance.InternalUnRegisterCanvasElementForGraphicRebuild(element);
         }
 
+        // 内部私有，移除 LayoutRebuild 注册
+        // 1、检查确保 LayoutUpdate 不是正在进行。
+        // 2、调用元素 LayoutComplete 事件。
+        // 3、从 LayoutRebuild 队列中移除。
         private void InternalUnRegisterCanvasElementForLayoutRebuild(ICanvasElement element)
         {
             if (m_PerformingLayoutUpdate)
@@ -304,6 +317,10 @@ namespace UnityEngine.UI
             instance.m_LayoutRebuildQueue.Remove(element);
         }
 
+        // 内部私有，移除 GraphicRebuild 注册
+        // 1、检查确保 GraphicUpdate 不是正在进行。
+        // 2、调用元素 GraphicUpdateComplete 事件。
+        // 3、从 GraphicUpdate 队列中移除。
         private void InternalUnRegisterCanvasElementForGraphicRebuild(ICanvasElement element)
         {
             if (m_PerformingGraphicUpdate)
@@ -315,19 +332,19 @@ namespace UnityEngine.UI
             instance.m_GraphicRebuildQueue.Remove(element);
         }
 
-        /// <summary>
-        /// Are graphics layouts currently being calculated..
-        /// </summary>
-        /// <returns>True if the rebuild loop is CanvasUpdate.Prelayout, CanvasUpdate.Layout or CanvasUpdate.Postlayout</returns>
+        // Are graphics layouts currently being calculated..
+        // True if the rebuild loop is CanvasUpdate.Prelayout, CanvasUpdate.Layout or CanvasUpdate.Postlayout
+        // 是否 Graphics layouts 正在被计算？
+        // 当重建循环的阶段在 CanvasUpdate.Prelayout、CanvasUpdate.Layout 或 CanvasUpdate.Postlayout 时，则返回true。
         public static bool IsRebuildingLayout()
         {
             return instance.m_PerformingLayoutUpdate;
         }
 
-        /// <summary>
-        /// Are graphics currently being rebuild.
-        /// </summary>
-        /// <returns>True if the rebuild loop is CanvasUpdate.PreRender or CanvasUpdate.Render</returns>
+        // Are graphics currently being rebuild.
+        // True if the rebuild loop is CanvasUpdate.PreRender or CanvasUpdate.Render
+        // 是否 Graphics renders 正在被重建？
+        // 当重建循环的阶段在 CanvasUpdate.PreRender 或 CanvasUpdate.Render 时，则返回true。
         public static bool IsRebuildingGraphics()
         {
             return instance.m_PerformingGraphicUpdate;
