@@ -82,12 +82,9 @@ namespace UnityEngine.UI
     {
         static protected Material s_DefaultUI = null;       //默认UI材质，Canvas.GetDefaultCanvasMaterial()
         static protected Texture2D s_WhiteTexture = null;   //默认空白贴图，Texture2D.whiteTexture
-
-        /// <summary>
-        /// Default material used to draw UI elements if no explicit material was specified.
-        /// 如果没有明确指定材质，则默认材质用于绘制UI元素
-        /// </summary>
-
+        
+        // Default material used to draw UI elements if no explicit material was specified.
+        // 如果没有明确指定材质，则默认材质用于绘制UI元素
         static public Material defaultGraphicMaterial
         {
             get
@@ -98,7 +95,7 @@ namespace UnityEngine.UI
             }
         }
 
-        // Cached and saved values
+        // Cached and saved values 疑问??? 特性作用？
         [FormerlySerializedAs("m_Mat")]
         [SerializeField] protected Material m_Material;         //当前材质
 
@@ -154,9 +151,8 @@ namespace UnityEngine.UI
 
         [SerializeField] private bool m_RaycastTarget = true;   //是否作为射线检测目标
 
-        /// <summary>
-        /// Should this graphic be considered a target for raycasting?
-        /// </summary>
+        // Should this graphic be considered a target for raycasting?
+        // 本 graphic 是否应该被认为是射线检测的目标?
         public virtual bool raycastTarget { get { return m_RaycastTarget; } set { m_RaycastTarget = value; } }
 
         [NonSerialized] private RectTransform m_RectTransform;      //与自身同级的、依赖的RectTransform
@@ -171,7 +167,7 @@ namespace UnityEngine.UI
         [NonSerialized] protected UnityAction m_OnDirtyMaterialCallback;    //SetMaterialDirty() 被调用时触发该回调
 
         [NonSerialized] protected static Mesh s_Mesh;       //默认创建的、所有UI元素共享的 Mesh，HideFlags.HideAndDontSave。（新Scene中保留，Hierarchy上隐藏）
-        [NonSerialized] private static readonly VertexHelper s_VertexHelper = new VertexHelper();
+        [NonSerialized] private static readonly VertexHelper s_VertexHelper = new VertexHelper();   //顶点帮助工具类静态实例
 
         [NonSerialized] protected Mesh m_CachedMesh;        //疑问??? 没找到任何引用
         [NonSerialized] protected Vector2[] m_CachedUvs;    //疑问??? 没找到任何引用
@@ -192,18 +188,16 @@ namespace UnityEngine.UI
             useLegacyMeshGeneration = true;
         }
 
-        /// <summary>
-        /// Set all properties of the Graphic dirty and needing rebuilt.
-        /// Dirties Layout, Vertices, and Materials.
-        /// </summary>
+        // Set all properties of the Graphic dirty and needing rebuilt. Dirties Layout, Vertices, and Materials.
+        // 设置 Graphic 的所有脏标记为脏（需要重建）。 Layout脏、Materials脏、Vertices脏。
+        // 这里不用考虑顺序。因为只是做标记。真正重建的时候要保证顺序。
         public virtual void SetAllDirty()
         {
-            // Optimization: Graphic layout doesn't need recalculation if
-            // the underlying Sprite is the same size with the same texture.
+            // Optimization: Graphic layout doesn't need recalculation if the underlying Sprite is the same size with the same texture.
             // (e.g. Sprite sheet texture animation)
-            //优化:如果基础精灵具有相同的大小和纹理，那么 Graphic layout 便不需要重新计算。
+            // 优化:如果基础精灵具有相同的大小和纹理，那么 Graphic layout 便不需要重新计算。
 
-            //能跳过的过程尽量跳过
+            // LayoutUpdate 和 MaterialUpdate 可跳过。能跳过的应尽量跳过。
             if (m_SkipLayoutUpdate)
             {
                 m_SkipLayoutUpdate = false;
@@ -225,12 +219,10 @@ namespace UnityEngine.UI
             SetVerticesDirty();
         }
 
-        /// <summary>
-        /// Mark the layout as dirty and needing rebuilt.
-        /// </summary>
-        /// <remarks>
-        /// Send a OnDirtyLayoutCallback notification if any elements are registered. See RegisterDirtyLayoutCallback
-        /// </remarks>
+        // Mark the layout as dirty and needing rebuilt.
+        // Send a OnDirtyLayoutCallback notification if any elements are registered. See RegisterDirtyLayoutCallback
+        // 1、标记为需要重新布局。
+        // 2、触发一个 布局脏事件。
         public virtual void SetLayoutDirty()
         {
             if (!IsActive())
@@ -242,12 +234,11 @@ namespace UnityEngine.UI
                 m_OnDirtyLayoutCallback();
         }
 
-        /// <summary>
-        /// Mark the vertices as dirty and needing rebuilt.
-        /// </summary>
-        /// <remarks>
-        /// Send a OnDirtyVertsCallback notification if any elements are registered. See RegisterDirtyVerticesCallback
-        /// </remarks>
+        // Mark the vertices as dirty and needing rebuilt.
+        // Send a OnDirtyVertsCallback notification if any elements are registered. See RegisterDirtyVerticesCallback
+        // 1、标记 顶点脏标记 为脏。
+        // 2、在 CanvasUpdateRegistry 中注册。（使图形更新生效）。
+        // 3、触发一个 顶点脏事件。
         public virtual void SetVerticesDirty()
         {
             if (!IsActive())
@@ -260,12 +251,9 @@ namespace UnityEngine.UI
                 m_OnDirtyVertsCallback();
         }
 
-        /// <summary>
-        /// Mark the material as dirty and needing rebuilt.
-        /// </summary>
-        /// <remarks>
-        /// Send a OnDirtyMaterialCallback notification if any elements are registered. See RegisterDirtyMaterialCallback
-        /// </remarks>
+        // 1、标记 材质脏标记 为脏。
+        // 2、在 CanvasUpdateRegistry 中注册。（使图形更新生效）。
+        // 3、触发一个 材质脏事件。
         public virtual void SetMaterialDirty()
         {
             if (!IsActive())
@@ -570,17 +558,18 @@ namespace UnityEngine.UI
             }
         }
 
-        /// <summary>
-        /// This method must be called when <c>CanvasRenderer.cull</c> is modified.
-        /// </summary>
-        /// <remarks>
-        /// This can be used to perform operations that were previously skipped because the <c>Graphic</c> was culled.
-        /// </remarks>
+        // This method must be called when <c>CanvasRenderer.cull</c> is modified.
+        // This can be used to perform operations that were previously skipped because the <c>Graphic</c> was culled.
+        // 当 CanvasRenderer.cull 被修改时，方法被调用。 CanvasRenderer.cull：指示是否忽略该渲染器发射的几何形状。
+        // 这可以用于执行因 Graphic 被剔除而在之前跳过的操作。
         public virtual void OnCullingChanged()
         {
             if (!canvasRenderer.cull && (m_VertsDirty || m_MaterialDirty))
             {
-                /// When we were culled, we potentially skipped calls to <c>Rebuild</c>.
+                // When we were culled, we potentially skipped calls to <c>Rebuild</c>.
+                // 当我们处理剔除时，可能会跳过对 Rebuild 的调用。
+                //（指：如果 Graphic 被剔除，则不需要调用 SetVerticesDirty() 和 SetMaterialDirty()。 ）
+                // 因此，当剔除状态变化时（变为不再剔除），要重新执行跳过的步骤。
                 CanvasUpdateRegistry.RegisterCanvasElementForGraphicRebuild(this);
             }
         }
@@ -649,6 +638,12 @@ namespace UnityEngine.UI
             }
         }
 
+        //新的 Mesh 创建方法
+        //1、rectTransform 存在 且宽高为正时才创建，否则调用 s_VertexHelper 的清理方法。
+        //2、调用 OnPopulateMesh(VertexHelper vh) 执行创建。
+        //3、取“实现了接口 IMeshModifier”的组件，对 Mesh 修改。
+        //4、设置 workerMesh 到 canvasRenderer 上。
+        // 新旧创建方法的唯一区别是：新的创建方法引入了 VertexHelper。
         private void DoMeshGeneration()
         {
             if (rectTransform != null && rectTransform.rect.width >= 0 && rectTransform.rect.height >= 0)
@@ -668,9 +663,11 @@ namespace UnityEngine.UI
             canvasRenderer.SetMesh(workerMesh);
         }
 
-        //旧的 Mesh 创建方法
+        //旧的 Mesh 创建方法（）
         //1、rectTransform 存在 且宽高为正时才创建，否则调用 Mesh 的清理方法。
-        //2、调用 OnPopulateMesh 执行创建。
+        //2、调用 OnPopulateMesh(Mesh m) 执行创建。
+        //3、取“实现了接口 IMeshModifier”的组件，对 Mesh 修改。
+        //4、设置 workerMesh 到 canvasRenderer 上。
         private void DoLegacyMeshGeneration()
         {
             if (rectTransform != null && rectTransform.rect.width >= 0 && rectTransform.rect.height >= 0)
@@ -698,6 +695,7 @@ namespace UnityEngine.UI
             canvasRenderer.SetMesh(workerMesh);
         }
 
+        //工作Mesh，所有UI元素共享的 Mesh，HideFlags.HideAndDontSave。（新Scene中保留，Hierarchy上隐藏）
         protected static Mesh workerMesh
         {
             get
@@ -712,38 +710,31 @@ namespace UnityEngine.UI
             }
         }
 
+        //废弃方法。
         [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         [Obsolete("Use OnPopulateMesh instead.", true)]
         protected virtual void OnFillVBO(System.Collections.Generic.List<UIVertex> vbo) {}
 
+        //废弃方法，作用同 OnPopulateMesh(VertexHelper vh)
         [Obsolete("Use OnPopulateMesh(VertexHelper vh) instead.", false)]
-        /// <summary>
-        /// Callback function when a UI element needs to generate vertices. Fills the vertex buffer data.
-        /// </summary>
-        /// <param name="m">Mesh to populate with UI data.</param>
-        /// <remarks>
-        /// Used by Text, UI.Image, and RawImage for example to generate vertices specific to their use case.
-        /// </remarks>
         protected virtual void OnPopulateMesh(Mesh m)
         {
             OnPopulateMesh(s_VertexHelper);
             s_VertexHelper.FillMesh(m);
         }
 
-        /// <summary>
-        /// Callback function when a UI element needs to generate vertices. Fills the vertex buffer data.
-        /// </summary>
-        /// <param name="vh">VertexHelper utility.</param>
-        /// <remarks>
-        /// Used by Text, UI.Image, and RawImage for example to generate vertices specific to their use case.
-        /// </remarks>
+        // Callback function when a UI element needs to generate vertices. Fills the vertex buffer data.
+        // 当UI元素需要创建顶点时的回调函数。填充 vertex buffer data。
+        // 参数"vh"： 顶点帮助工具类
+        // 备注：例如，由 Text、Image、RawImage 用其来生成特定于它们自己的顶点。
+        //这里只是创建了一个默认的矩形（两个三角形）
         protected virtual void OnPopulateMesh(VertexHelper vh)
         {
             var r = GetPixelAdjustedRect();
             var v = new Vector4(r.x, r.y, r.x + r.width, r.y + r.height);
 
             Color32 color32 = color;
-            vh.Clear();
+            vh.Clear(); //vh 所有 Graphic 共用，故每次使用都要先Clear。
             vh.AddVert(new Vector3(v.x, v.y), color32, new Vector2(0f, 0f));
             vh.AddVert(new Vector3(v.x, v.w), color32, new Vector2(0f, 1f));
             vh.AddVert(new Vector3(v.z, v.w), color32, new Vector2(1f, 1f));
@@ -766,7 +757,7 @@ namespace UnityEngine.UI
             // we do this via reflection. It's nasty and ugly... Editor only.
             //当重建被请求时，我们需要重建所有的graphics和相关组件…
             //做这件事的正确方法是调用OnValidate……
-            //但因为MonoBehaviour没有公共基类,所以通过反射来实现。又脏又丑……仅编辑器下。
+            //但因为MonoBehaviour没有公共基类， 所以通过反射来实现。又脏又丑……仅编辑器下。
             var mbs = gameObject.GetComponents<MonoBehaviour>();
             foreach (var mb in mbs)
             {
@@ -804,7 +795,7 @@ namespace UnityEngine.UI
         // 当GraphicRaycaster向场景进行光线投射时，它会做两件事。它使用 RectTransform 的 rect 来过滤元素。使用光线投射函数来确定光线投射的元素。
         // 参数 "sp": Screen point being tested。被射线检测的屏幕坐标
         // 参数 "eventCamera": Camera that is being used for the testing. 射线检测的事件相机
-        // 方法的目的：确定 本 Graphic 是否没射线检测到!!!
+        // 方法的目的：确定本 Graphic 的物体 是否被射线检测到!!!？
         // 1、若未激活/启动，则直接返回false。
         // 2、从当前 Graphic 开始向其父物体递归遍历检测，直到parent为null或被提前打断。
         // 3、若当前物体存在一个“使用自己独立 SortOrder” 的 Canvas 组件，则使本次执行完后结束递归遍历（提前打断）。（NRatel原因/结论：检测以相同 SortOrder 为基准，对嵌套的 Canvas 分割断层。
@@ -886,60 +877,50 @@ namespace UnityEngine.UI
 
 #endif
 
-        ///<summary>
-        ///Adjusts the given pixel to be pixel perfect.
-        ///</summary>
-        ///<param name="point">Local space point.</param>
-        ///<returns>Pixel perfect adjusted point.</returns>
-        ///<remarks>
-        ///Note: This is only accurate if the Graphic root Canvas is in Screen Space.
-        ///</remarks>
+        // Adjusts the given pixel to be pixel perfect.
+        // 调整给定像素为完美像素。
+        // 受 Canvas 的配置 canvas.pixelPerfect 影响。https://docs.unity3d.com/cn/2020.1/ScriptReference/Canvas-pixelPerfect.html
+        // 仅在 renderMode 为屏幕空间时有效。
+        // 参数"point"：Local space point. 本地空间坐标。
         public Vector2 PixelAdjustPoint(Vector2 point)
         {
             if (!canvas || canvas.renderMode == RenderMode.WorldSpace || canvas.scaleFactor == 0.0f || !canvas.pixelPerfect)
                 return point;
             else
             {
+                //Unity C#源码中也看不到具体实现
                 return RectTransformUtility.PixelAdjustPoint(point, transform, canvas);
             }
         }
 
-        /// <summary>
-        /// Returns a pixel perfect Rect closest to the Graphic RectTransform.
-        /// </summary>
-        /// <remarks>
-        /// Note: This is only accurate if the Graphic root Canvas is in Screen Space.
-        /// </remarks>
-        /// <returns>A Pixel perfect Rect.</returns>
+        // Returns a pixel perfect Rect closest to the Graphic RectTransform.
+        // 返回最接近图形矩形变换的完美像素矩形。
+        // 受 Canvas 的配置 canvas.pixelPerfect 影响。https://docs.unity3d.com/cn/2020.1/ScriptReference/Canvas-pixelPerfect.html
+        // 仅在 renderMode 为屏幕空间时有效。
         public Rect GetPixelAdjustedRect()
         {
             if (!canvas || canvas.renderMode == RenderMode.WorldSpace || canvas.scaleFactor == 0.0f || !canvas.pixelPerfect)
                 return rectTransform.rect;
             else
-                return RectTransformUtility.PixelAdjustRect(rectTransform, canvas);
+                //Unity C#源码中也看不到具体实现
+                //https://github.com/Unity-Technologies/UnityCsReference/blob/61f92bd79ae862c4465d35270f9d1d57befd1761/Modules/UI/ScriptBindings/RectTransformUtil.bindings.cs
+                return RectTransformUtility.PixelAdjustRect(rectTransform, canvas); 
         }
 
-        ///<summary>
-        ///Tweens the CanvasRenderer color associated with this Graphic.
-        ///</summary>
-        ///<param name="targetColor">Target color.</param>
-        ///<param name="duration">Tween duration.</param>
-        ///<param name="ignoreTimeScale">Should ignore Time.scale?</param>
-        ///<param name="useAlpha">Should also Tween the alpha channel?</param>
+        //重载方法，同其他
         public virtual void CrossFadeColor(Color targetColor, float duration, bool ignoreTimeScale, bool useAlpha)
         {
             CrossFadeColor(targetColor, duration, ignoreTimeScale, useAlpha, true);
         }
 
-        ///<summary>
-        ///Tweens the CanvasRenderer color associated with this Graphic.
-        ///用内置m_ColorTweenRunner执行颜色渐变（最终调用canvasRenderer.SetColor）
-        ///</summary>
-        ///<param name="targetColor">Target color.</param>
-        ///<param name="duration">Tween duration.</param>
-        ///<param name="ignoreTimeScale">Should ignore Time.scale?</param>
-        ///<param name="useAlpha">Should also Tween the alpha channel?</param>
-        /// <param name="useRGB">Should the color or the alpha be used to tween</param>
+        // Tweens the CanvasRenderer color associated with this Graphic.
+        // 用内置m_ColorTweenRunner执行颜色渐变（最终调用canvasRenderer.SetColor）
+        // 参数"targetColor"：Target color. 目标颜色
+        // 参数"duration"：Tween duration. 持续时间
+        // 参数"ignoreTimeScale"：Should ignore Time.scale? 是否忽略时间缩放
+        // 参数"useAlpha"：Should also Tween the alpha channel? 是否变换透明度？
+        // 参数"useRGB"：Should the color or the alpha be used to tween? 是否变化RGB？
+        // 其实是提供3种变换方式（1、全部；2、仅RGB；3、仅透明度）
         public virtual void CrossFadeColor(Color targetColor, float duration, bool ignoreTimeScale, bool useAlpha, bool useRGB)
         {
             if (canvasRenderer == null || (!useRGB && !useAlpha))
@@ -963,6 +944,7 @@ namespace UnityEngine.UI
             m_ColorTweenRunner.StartTween(colorTween);
         }
 
+        //创建一个黑色的、带透明度的Color（仅透明度有效）
         static private Color CreateColorFromAlpha(float alpha)
         {
             var alphaColor = Color.black;
@@ -970,12 +952,7 @@ namespace UnityEngine.UI
             return alphaColor;
         }
 
-        ///<summary>
-        ///Tweens the alpha of the CanvasRenderer color associated with this Graphic.
-        ///</summary>
-        ///<param name="alpha">Target alpha.</param>
-        ///<param name="duration">Duration of the tween in seconds.</param>
-        ///<param name="ignoreTimeScale">Should ignore [[Time.scale]]?</param>
+        //重载方法，同其他
         public virtual void CrossFadeAlpha(float alpha, float duration, bool ignoreTimeScale)
         {
             CrossFadeColor(CreateColorFromAlpha(alpha), duration, ignoreTimeScale, true, false);
