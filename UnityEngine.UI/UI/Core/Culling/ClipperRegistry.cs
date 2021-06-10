@@ -3,12 +3,10 @@ using UnityEngine.UI.Collections;
 
 namespace UnityEngine.UI
 {
-    /// <summary>
-    /// Registry class to keep track of all IClippers that exist in the scene
-    /// </summary>
-    /// <remarks>
-    /// This is used during the CanvasUpdate loop to cull clippable elements. The clipping is called after layout, but before Graphic update.
-    /// </remarks>
+    // Registry class to keep track of all IClippers that exist in the scene
+    // This is used during the CanvasUpdate loop to cull clippable elements. The clipping is called after layout, but before Graphic update.
+    // 一个用于跟踪场景中所有 实现了 IClipper 接口的对象的 注册表类。
+    // 这是在 CanvasUpdate 循环期间用来剔除可剪切元素的。方法在 LayoutUpdate 与 GraphicUpdate 之间被调用。
     public class ClipperRegistry
     {
         static ClipperRegistry s_Instance;
@@ -18,14 +16,15 @@ namespace UnityEngine.UI
         protected ClipperRegistry()
         {
             // This is needed for AOT platforms. Without it the compile doesn't get the definition of the Dictionarys
+            // 这是 AOT 平台所需要的。没有它，编译器就得不到字典的的定义。
+            // 疑问???
 #pragma warning disable 168
             Dictionary<IClipper, int> emptyIClipperDic;
 #pragma warning restore 168
         }
 
-        /// <summary>
-        /// The singleton instance of the clipper registry.
-        /// </summary>
+        // The singleton instance of the clipper registry.
+        // ClipperRegistry 单例
         public static ClipperRegistry instance
         {
             get
@@ -36,9 +35,8 @@ namespace UnityEngine.UI
             }
         }
 
-        /// <summary>
-        /// Perform the clipping on all registered IClipper
-        /// </summary>
+        // Perform the clipping on all registered IClipper
+        // 在所有注册的 IClipper 上执行裁剪
         public void Cull()
         {
             for (var i = 0; i < m_Clippers.Count; ++i)
@@ -47,10 +45,8 @@ namespace UnityEngine.UI
             }
         }
 
-        /// <summary>
-        /// Register a unique IClipper element
-        /// </summary>
-        /// <param name="c">The clipper element to add</param>
+        // Register a unique IClipper element
+        // 注册一个特定 IClipper 元素
         public static void Register(IClipper c)
         {
             if (c == null)
@@ -58,10 +54,8 @@ namespace UnityEngine.UI
             instance.m_Clippers.AddUnique(c);
         }
 
-        /// <summary>
-        /// UnRegister a IClipper element
-        /// </summary>
-        /// <param name="c">The Element to try and remove.</param>
+        // UnRegister a IClipper element
+        // 将 IClipper 元素从注册中移除
         public static void Unregister(IClipper c)
         {
             instance.m_Clippers.Remove(c);

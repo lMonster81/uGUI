@@ -180,7 +180,7 @@ namespace UnityEngine.UI
             Ray ray = new Ray();
 
             if (currentEventCamera != null)
-                ray = currentEventCamera.ScreenPointToRay(eventPosition);
+                ray = currentEventCamera.ScreenPointToRay(eventPosition);   //创建一个从当前事件相机到点击点的射线
 
             if (canvas.renderMode != RenderMode.ScreenSpaceOverlay && blockingObjects != BlockingObjects.None)
             {

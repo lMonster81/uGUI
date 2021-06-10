@@ -20,10 +20,19 @@ namespace UnityEngine.UI
     /// *Requires fewer draw calls
     /// *Culls elements that are outside the mask area.
     /// </remarks>
+    ///
+
+    // A 2D rectangular mask that allows for clipping / masking of areas outside the mask.
+    // 一个允许裁剪 Mask 之外区域的2D矩形Mask。
+    // * Only works in the 2D plane. 只在2D平面中工作。
+    // * Requires elements on the mask to be coplanar. 要求元素与Mask在同一平面。
+    // * Does not require stencil buffer / extra draw calls. 不需要模板缓冲区 / 额外的 draw calls。
+    // * Requires fewer draw calls. 需要较少的绘制调用。
+    // * 删除 Mask 区域之外的元素。
     public class RectMask2D : UIBehaviour, IClipper, ICanvasRaycastFilter
     {
         [NonSerialized]
-        private readonly RectangularVertexClipper m_VertexClipper = new RectangularVertexClipper();
+        private readonly RectangularVertexClipper m_VertexClipper = new RectangularVertexClipper(); //矩形顶点剔除
 
         [NonSerialized]
         private RectTransform m_RectTransform;
@@ -45,9 +54,8 @@ namespace UnityEngine.UI
         [NonSerialized]
         private bool m_ForceClip;
 
-        /// <remarks>
-        /// Returns a non-destroyed instance or a null reference.
-        /// </remarks>
+        // Returns a non-destroyed instance or a null reference.
+        // 返回一个未销毁的 Canvas 或 null。
         [NonSerialized] private Canvas m_Canvas;
         private Canvas Canvas
         {
@@ -68,9 +76,8 @@ namespace UnityEngine.UI
             }
         }
 
-        /// <summary>
-        /// Get the Rect for the mask in canvas space.
-        /// </summary>
+        // Get the Rect for the mask in canvas space.
+        // 获取 Canvas空间 下 的 Mask 的 Rect。
         public Rect canvasRect
         {
             get
@@ -79,9 +86,8 @@ namespace UnityEngine.UI
             }
         }
 
-        /// <summary>
-        /// Helper function to get the RectTransform for the mask.
-        /// </summary>
+        // Helper function to get the RectTransform for the mask.
+        // 获取 与本 RectMask2D 关联的 RectTransform。
         public RectTransform rectTransform
         {
             get { return m_RectTransform ?? (m_RectTransform = GetComponent<RectTransform>()); }

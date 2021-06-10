@@ -142,9 +142,9 @@ namespace UnityEngine.UI
 
         // 执行更新！
         // 1、清理无效项。
-        // 2、执行 LayoutUpdate。 注意两层for循环的顺序，每个阶段所有物体执行完Rebuild()，才进入下一个更新阶段。
+        // 2、执行 LayoutUpdate，三个阶段：Prelayout、Layout、PostLayout。 注意两层for循环的顺序，每个阶段所有物体执行完Rebuild()，才进入下一个更新阶段。
         // 3、执行 Culling。
-        // 4、执行 GraphicUpdate。注意两层for循环的顺序，每个阶段所有物体执行完Rebuild()，才进入下一个更新阶段。
+        // 4、执行 GraphicUpdate，二个阶段：PreRender、LatePreRender。注意两层for循环的顺序，每个阶段所有物体执行完Rebuild()，才进入下一个更新阶段。
         private void PerformUpdate()
         {
             UISystemProfilerApi.BeginSample(UISystemProfilerApi.SampleType.Layout);     //性能采样。 疑问??? 为什么只有 SampleType.Layout，没有 SampleType.Render？

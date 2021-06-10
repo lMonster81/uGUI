@@ -10,9 +10,8 @@ using UnityEngine.UI.CoroutineTween;
 
 namespace UnityEngine.UI
 {
-    /// <summary>
-    /// Base class for all UI components that should be derived from when creating new Graphic types.
-    /// </summary>
+    // Base class for all UI components that should be derived from when creating new Graphic types.
+    //创建新的 Graphic 图形类型时应该派生的、所有UI组件的基类。
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CanvasRenderer))]
     [RequireComponent(typeof(RectTransform))]
@@ -349,12 +348,9 @@ namespace UnityEngine.UI
             }
         }
 
-        /// <summary>
-        /// A reference to the Canvas this Graphic is rendering to.
-        /// </summary>
-        /// <remarks>
-        /// In the situation where the Graphic is used in a hierarchy with multiple Canvases, the Canvas closest to the root will be used.
-        /// </remarks>
+        // A reference to the Canvas this Graphic is rendering to.
+        // In the situation where the Graphic is used in a hierarchy with multiple Canvases, the Canvas closest to the root will be used.
+        // Graphic 所在的 Canvas。在有多个Canvas嵌套时，使用最接近的Canvas。
         public Canvas canvas
         {
             get
@@ -389,15 +385,15 @@ namespace UnityEngine.UI
             ListPool<Canvas>.Release(list);
         }
 
-        /// <summary>
-        /// A reference to the CanvasRenderer populated by this Graphic.
-        /// </summary>
+        // A reference to the CanvasRenderer populated by this Graphic.
+        // Graphic 所在的 CanvasRenderer（同级，每个Graphic一一对应一个CanvasRenderer）。
         public CanvasRenderer canvasRenderer
         {
             get
             {
                 // The CanvasRenderer is a required component that must not be destroyed. Based on this assumption, a
                 // null-reference check is sufficient.
+                // CanvasRenderer一个必须的、不能被销毁的组件。基于这个假设，空引用检查就足够了
                 if (ReferenceEquals(m_CanvasRenderer, null))
                 {
                     m_CanvasRenderer = GetComponent<CanvasRenderer>();
@@ -435,13 +431,12 @@ namespace UnityEngine.UI
             }
         }
 
-        /// <summary>
-        /// The material that will be sent for Rendering (Read only).
-        /// </summary>
-        /// <remarks>
-        /// This is the material that actually gets sent to the CanvasRenderer. By default it's the same as [[Graphic.material]]. When extending Graphic you can override this to send a different material to the CanvasRenderer than the one set by Graphic.material. This is useful if you want to modify the user set material in a non destructive manner.
-        /// 实际被发送到CanvasRenderer的、被 IMaterialModifier 修改后的材质。（可重写）
-        /// </remarks>
+        // The material that will be sent for Rendering (Read only).
+        // This is the material that actually gets sent to the CanvasRenderer. By default it's the same as [[Graphic.material]]. When extending Graphic you can override this to send a different material to the CanvasRenderer than the one set by Graphic.material. This is useful if you want to modify the user set material in a non destructive manner.
+        // 实际被发送到CanvasRenderer的、被 IMaterialModifier 修改后的材质。（只读、可重写）
+        // 这是实际发送到CanvasRenderer的材质。默认情况下，它与 Graphic.material 相同。
+        // 当扩展Graphic时，你可以覆盖它，发送一个不同于 Graphic.material 设置的材质到 CanvasRenderer。
+        // 如果你想以非破坏性的方式修改用户设置的材质，这是很有用的。
         public virtual Material materialForRendering
         {
             get
@@ -457,16 +452,14 @@ namespace UnityEngine.UI
             }
         }
 
-        /// <summary>
-        /// The graphic's texture. (Read Only).
-        /// </summary>
-        /// <remarks>
-        /// This is the Texture that gets passed to the CanvasRenderer, Material and then Shader _MainTex.
-        ///
-        /// When implementing your own Graphic you can override this to control which texture goes through the UI Rendering pipeline.
-        ///
-        /// Bear in mind that Unity tries to batch UI elements together to improve performance, so its ideal to work with atlas to reduce the number of draw calls.
-        /// </remarks>
+        // The graphic's texture. (Read Only).
+        // This is the Texture that gets passed to the CanvasRenderer, Material and then Shader _MainTex.
+        // When implementing your own Graphic you can override this to control which texture goes through the UI Rendering pipeline.
+        // Bear in mind that Unity tries to batch UI elements together to improve performance, so its ideal to work with atlas to reduce the number of draw calls.
+        // 图形的纹理。
+        // 这是被传递到 CanvasRenderer, Material 和 Shader _MainTex 的纹理。
+        // 当你实现自己的图形时，你可以覆盖它，来控制怎样的纹理进入UI渲染管线。
+        // 请记住，Unity试图批量处理UI元素以提高性能，所以它的理想工作方式是与图集协作，以减少 draw call 的数量。
         public virtual Texture mainTexture
         {
             get

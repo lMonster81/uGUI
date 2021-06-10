@@ -1,52 +1,42 @@
 namespace UnityEngine.UI
 {
-    /// <summary>
-    ///   Interface that can be used to recieve clipping callbacks as part of the canvas update loop.
-    /// </summary>
+    // Interface that can be used to recieve clipping callbacks as part of the canvas update loop.
+    // 接口，可用于接收裁剪回调（裁剪是画布更新循环的一部分）。
+    // 实现该接口的元素，将裁剪其“实现了 IClippable 接口”的子物体
     public interface IClipper
     {
-        /// <summary>
-        /// Function to to cull / clip children elements.
-        /// </summary>
-        /// <remarks>
-        /// Called after layout and before Graphic update of the Canvas update loop.
-        /// </remarks>
-
+        // Function to to cull / clip children elements.
+        // Called after layout and before Graphic update of the Canvas update loop.
+        // 在 CanvasUpdate 循环中, 方法在 LayoutUpdate 与 GraphicUpdate 之间被调用。
         void PerformClipping();
     }
 
-    /// <summary>
-    ///   Interface for elements that can be clipped if they are under an IClipper
-    /// </summary>
+    // Interface for elements that can be clipped if they are under an IClipper
+    // 接口，实现该接口的元素，如果是“实现了 IClipper 接口”（目前只有RectMask2D）的元素的子物体，则可被裁剪。
     public interface IClippable
     {
-        /// <summary>
-        /// GameObject of the IClippable object
-        /// </summary>
+        // 实现了 IClippable 接口的组件所在的 GameObject
         GameObject gameObject { get; }
 
-        /// <summary>
-        /// Will be called when the state of a parent IClippable changed.
-        /// </summary>
+        // Will be called when the state of a parent IClippable changed.
+        // “实现了 IClipper 接口”的元素（目前只有RectMask2D）状态改变时，调用其“实现了 IClippable 接口”的子物体的该方法。
+        // 状态改变包括：OnEnable、OnDisable、OnValidate（编辑器下）。
         void RecalculateClipping();
 
-        /// <summary>
-        /// The RectTransform of the clippable.
-        /// </summary>
+        // The RectTransform of the clippable.
+        // 实现了 IClippable 接口的组件关联的 RectTransform。
         RectTransform rectTransform { get; }
 
-        /// <summary>
-        /// Clip and cull the IClippable given a specific clipping rect
-        /// </summary>
-        /// <param name="clipRect">The Rectangle in which to clip against.</param>
-        /// <param name="validRect">Is the Rect valid. If not then the rect has 0 size.</param>
+        // Clip and cull the IClippable given a specific clipping rect
+        // 裁剪和剔除 IClippable 给定的裁剪矩形
+        // 参数"clipRect"：The Rectangle in which to clip against. 裁剪矩形。
+        // 参数"validRect"：Is the Rect valid. If not then the rect has 0 size. 矩形是否有效，若无效，矩形的大小为0，
         void Cull(Rect clipRect, bool validRect);
 
-        /// <summary>
-        /// Set the clip rect for the IClippable.
-        /// </summary>
-        /// <param name="value">The Rectangle for the clipping</param>
-        /// <param name="validRect">Is the rect valid.</param>
+        // Set the clip rect for the IClippable.
+        // 设置裁剪矩形。
+        // 参数"value"：The Rectangle for the clipping.  裁剪矩形。
+        // 参数"validRect"：Is the rect valid.  矩形是否有效
         void SetClipRect(Rect value, bool validRect);
     }
 }
