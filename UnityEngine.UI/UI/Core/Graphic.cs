@@ -553,7 +553,7 @@ namespace UnityEngine.UI
 
         // This method must be called when <c>CanvasRenderer.cull</c> is modified.
         // This can be used to perform operations that were previously skipped because the <c>Graphic</c> was culled.
-        // 当 CanvasRenderer.cull 被修改时，方法被调用。 CanvasRenderer.cull：指示是否忽略该渲染器发射的几何形状。
+        // 当 CanvasRenderer.cull 被修改时，方法被调用。 CanvasRenderer.cull：表示是否忽略该渲染器发射的几何形状。
         // 这可以用于执行因 Graphic 被剔除而在之前跳过的操作。
         public virtual void OnCullingChanged()
         {

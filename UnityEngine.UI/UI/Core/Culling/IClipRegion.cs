@@ -36,7 +36,7 @@ namespace UnityEngine.UI
         // Set the clip rect for the IClippable.
         // 设置裁剪矩形。
         // 参数"value"：The Rectangle for the clipping.  裁剪矩形。
-        // 参数"validRect"：Is the rect valid.  矩形是否有效
+        // 参数"validRect"：Is the rect valid.  矩形是否有效。
         void SetClipRect(Rect value, bool validRect);
     }
 }

@@ -10,23 +10,24 @@ namespace UnityEngine.UI
     public abstract class MaskableGraphic : Graphic, IClippable, IMaskable, IMaterialModifier
     {
         [NonSerialized]
-        protected bool m_ShouldRecalculateStencil = true;
+        protected bool m_ShouldRecalculateStencil = true;   //是否重新计算模板测试值（脏标记）
 
         [NonSerialized]
-        protected Material m_MaskMaterial;
+        protected Material m_MaskMaterial;  //遮罩材质
 
         [NonSerialized]
-        private RectMask2D m_ParentMask;
+        private RectMask2D m_ParentMask;    //父 RectMask2D， 由 RectMask2D 在 RecalculateClipping 时为其所有“实现了接口 IClippable”的子物体设置 
 
         // m_Maskable is whether this graphic is allowed to be masked or not. It has the matching public property maskable.
         // The default for m_Maskable is true, so graphics under a mask are masked out of the box.
         // The maskable property can be turned off from script by the user if masking is not desired.
-        // m_IncludeForMasking is whether we actually consider this graphic for masking or not - this is an implementation detail.
-        // m_IncludeForMasking should only be true if m_Maskable is true AND a parent of the graphic has an IMask component.
-        // Things would still work correctly if m_IncludeForMasking was always true when m_Maskable is, but performance would suffer.
+        // m_Maskable 表示这个图形是否允许被 Mask。有与之对应的 public属性 maskable。
+        // m_Maskable 的默认值是true，所以 Mask 下的图形是默认生效的。
+        // 如果不想被 Mask，可以用脚本关闭 maskable 属性。
         [NonSerialized]
         private bool m_Maskable = true;
 
+        // m_IncludeForMasking 已废弃。
         [NonSerialized]
         [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         [Obsolete("Not used anymore.", true)]
@@ -34,26 +35,23 @@ namespace UnityEngine.UI
 
         [Serializable]
         public class CullStateChangedEvent : UnityEvent<bool> {}
-
-        // Event delegates triggered on click.
+        
         [SerializeField]
         private CullStateChangedEvent m_OnCullStateChanged = new CullStateChangedEvent();
 
-        /// <summary>
-        /// Callback issued when culling changes.
-        /// </summary>
-        /// <remarks>
-        /// Called whene the culling state of this MaskableGraphic either becomes culled or visible. You can use this to control other elements of your UI as culling happens.
-        /// </remarks>
+        // Callback issued when culling changes.
+        // Called when the culling state of this MaskableGraphic either becomes culled or visible. You can use this to control other elements of your UI as culling happens.
+        // 剔除改变时的回调。
+        // 当 MaskableGraphic 的剔除状态变成 被剔除（culled）或 可见时（visible）调用。
+        // 当 剔除发生时，你可以使用它来控制UI的其他元素。
         public CullStateChangedEvent onCullStateChanged
         {
             get { return m_OnCullStateChanged; }
             set { m_OnCullStateChanged = value; }
         }
 
-        /// <summary>
-        /// Does this graphic allow masking.
-        /// </summary>
+        // Does this graphic allow masking.
+        // 这个图形是否允许被 Mask
         public bool maskable
         {
             get { return m_Maskable; }
@@ -73,7 +71,7 @@ namespace UnityEngine.UI
         protected bool m_ShouldRecalculate = true;
 
         [NonSerialized]
-        protected int m_StencilValue;
+        protected int m_StencilValue;   //模板测试值
 
         /// <summary>
         /// See IMaterialModifier.GetModifiedMaterial
@@ -134,6 +132,8 @@ namespace UnityEngine.UI
                 canvasRenderer.DisableRectClipping();
         }
 
+        //1、执行父类 OnEnable
+        //2、m_ShouldRecalculateStencil 设为true（需要计算模板值）
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -231,8 +231,10 @@ namespace UnityEngine.UI
             }
         }
 
+        // 更新 m_ParentMask
         private void UpdateClipParent()
         {
+            // 仅当需要被 Mask 且 Active 时，取当前可令自身 IClippable 生效的父 RectMask2D 为 m_ParentMask。 否则为null。
             var newParent = (maskable && IsActive()) ? MaskUtilities.GetRectMaskForClippable(this) : null;
 
             // if the new parent is different OR is now inactive

@@ -107,12 +107,11 @@ namespace UnityEngine.UI
             return depth;
         }
 
-        /// <summary>
-        /// Helper function to determine if the child is a descendant of father or is father.
-        /// </summary>
-        /// <param name="father">The transform to compare against.</param>
-        /// <param name="child">The starting transform to search up the hierarchy.</param>
-        /// <returns>Is child equal to father or is a descendant.</returns>
+        // Helper function to determine if the child is a descendant of father or is father.
+        // Is child equal to father or is a descendant.
+        // 辅助方法，判断 B与A相同，或B是A的子孙。
+        // 参数"father"：A。
+        // 参数"child"：B。
         public static bool IsDescendantOrSelf(Transform father, Transform child)
         {
             if (father == null || child == null)
@@ -132,43 +131,60 @@ namespace UnityEngine.UI
             return false;
         }
 
-        /// <summary>
-        /// Find the correct RectMask2D for a given IClippable.
-        /// </summary>
-        /// <param name="clippable">Clippable to search from.</param>
-        /// <returns>The Correct RectMask2D</returns>
+        // Find the correct RectMask2D for a given IClippable.
+        // 为给定的 IClippable 查找其正确的 RectMask2D。
+        // 1、取 clippable 所有的父 RectMask2D 组件。
+        // 2、若不存在返回 null。
+        // 3、开始遍历查找。
+        //    若是 clippable 自身上的 RectMask2D，则跳过当前继续查找。
+        //    若 RectMask2D 组件的物体未激活，或组件未启用，则跳过当前继续查找。
+        //    取 clippable 所有的父 Canvas 组件。进行遍历判断。
+        //       看 clippable 与 RectMask2D 层级之间是否夹有使用独立 SortOrder 的 Canvas。
+        //       若是，则说明不存在生效的 RectMask2D。返回null（依次打断内层循环、外层循环）。
+        //    若存在生效的 RectMask2D 则返回。
         public static RectMask2D GetRectMaskForClippable(IClippable clippable)
         {
             List<RectMask2D> rectMaskComponents = ListPool<RectMask2D>.Get();
             List<Canvas> canvasComponents = ListPool<Canvas>.Get();
             RectMask2D componentToReturn = null;
-
-            clippable.gameObject.GetComponentsInParent(false, rectMaskComponents);
+            
+            clippable.gameObject.GetComponentsInParent(false, rectMaskComponents);  // 取 clippable 所有的父 RectMask2D 组件（不包含未激活的）。
 
             if (rectMaskComponents.Count > 0)
             {
-                for (int rmi = 0; rmi < rectMaskComponents.Count; rmi++)
+                for (int rmi = 0; rmi < rectMaskComponents.Count; rmi++)        //遍历 RectMask2D
                 {
                     componentToReturn = rectMaskComponents[rmi];
-                    if (componentToReturn.gameObject == clippable.gameObject)
+                    if (componentToReturn.gameObject == clippable.gameObject)   //若是 clippable 自身上的 RectMask2D，则跳过。
                     {
                         componentToReturn = null;
                         continue;
                     }
-                    if (!componentToReturn.isActiveAndEnabled)
+                    if (!componentToReturn.isActiveAndEnabled)      //若 RectMask2D 组件的物体未激活或组件未启用，则跳过。可细微优化，取组件时已经是未激活的了。
                     {
                         componentToReturn = null;
                         continue;
                     }
-                    clippable.gameObject.GetComponentsInParent(false, canvasComponents);
-                    for (int i = canvasComponents.Count - 1; i >= 0; i--)
+                    
+                    clippable.gameObject.GetComponentsInParent(false, canvasComponents);    // 取 clippable 所有的父 Canvas 组件。
+                    for (int i = canvasComponents.Count - 1; i >= 0; i--)        //遍历 Canvas
                     {
+                        // 该 RectMask2D 不与 该 Canvas 同物体，也不是该 Canvas 的子孙物体 且 该 Canvas 使用独立的 SortOrder。
+                        // 即：若“使用独立 SortOrder”的 Canvas，出现在 RectMask2D 和 clippable 物体的中间。 则此时应使 RectMask2D 不对 clippable 生效。
+                        // 如，以下层级关系中, 由于Canvas2的存在，RectMask2D 将 不对 Image 生效。
+                        //---------------------------------------------------------
+                        // --Canvas1
+                        // ----RectMask2D
+                        // ------Canvas2（使用独立的SortOrder）
+                        // --------Image（clippable）
+                        //---------------------------------------------------------
                         if (!IsDescendantOrSelf(canvasComponents[i].transform, componentToReturn.transform) && canvasComponents[i].overrideSorting)
                         {
                             componentToReturn = null;
                             break;
                         }
                     }
+
                     break;
                 }
             }
