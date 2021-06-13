@@ -75,9 +75,7 @@ namespace UnityEngine.UI
     /// }
     /// </code>
     /// </example>
-    public abstract class Graphic
-        : UIBehaviour,
-          ICanvasElement
+    public abstract class Graphic  : UIBehaviour, ICanvasElement
     {
         static protected Material s_DefaultUI = null;       //默认UI材质，Canvas.GetDefaultCanvasMaterial()
         static protected Texture2D s_WhiteTexture = null;   //默认空白贴图，Texture2D.whiteTexture
@@ -951,55 +949,43 @@ namespace UnityEngine.UI
             CrossFadeColor(CreateColorFromAlpha(alpha), duration, ignoreTimeScale, true, false);
         }
 
-        /// <summary>
-        /// Add a listener to receive notification when the graphics layout is dirtied.
-        /// </summary>
-        /// <param name="action">The method to call when invoked.</param>
+        // Add a listener to receive notification when the graphics layout is dirtied.
+        // 添加一个listener，用于在图形布局为脏时接收通知。
         public void RegisterDirtyLayoutCallback(UnityAction action)
         {
             m_OnDirtyLayoutCallback += action;
         }
 
-        /// <summary>
-        /// Remove a listener from receiving notifications when the graphics layout are dirtied
-        /// </summary>
-        /// <param name="action">The method to call when invoked.</param>
+        // Remove a listener from receiving notifications when the graphics layout are dirtied
+        // 移除图形布局为脏的 listener。
         public void UnregisterDirtyLayoutCallback(UnityAction action)
         {
             m_OnDirtyLayoutCallback -= action;
         }
 
-        /// <summary>
-        /// Add a listener to receive notification when the graphics vertices are dirtied.
-        /// </summary>
-        /// <param name="action">The method to call when invoked.</param>
+        // Add a listener to receive notification when the graphics vertices are dirtied.
+        // 添加一个listener，用于在图形顶点为脏时接收通知。
         public void RegisterDirtyVerticesCallback(UnityAction action)
         {
             m_OnDirtyVertsCallback += action;
         }
 
-        /// <summary>
-        /// Remove a listener from receiving notifications when the graphics vertices are dirtied
-        /// </summary>
-        /// <param name="action">The method to call when invoked.</param>
+        // Remove a listener from receiving notifications when the graphics vertices are dirtied
+        // 移除图形顶点为脏的 listener。
         public void UnregisterDirtyVerticesCallback(UnityAction action)
         {
             m_OnDirtyVertsCallback -= action;
         }
 
-        /// <summary>
-        /// Add a listener to receive notification when the graphics material is dirtied.
-        /// </summary>
-        /// <param name="action">The method to call when invoked.</param>
+        // Add a listener to receive notification when the graphics material is dirtied.
+        // 添加一个listener，用于在图形材质为脏时接收通知。
         public void RegisterDirtyMaterialCallback(UnityAction action)
         {
             m_OnDirtyMaterialCallback += action;
         }
 
-        /// <summary>
-        /// Remove a listener from receiving notifications when the graphics material are dirtied
-        /// </summary>
-        /// <param name="action">The method to call when invoked.</param>
+        // Remove a listener from receiving notifications when the graphics material are dirtied
+        // 移除图形材质为脏的 listener。
         public void UnregisterDirtyMaterialCallback(UnityAction action)
         {
             m_OnDirtyMaterialCallback -= action;

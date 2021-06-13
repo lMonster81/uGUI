@@ -74,11 +74,11 @@ namespace UnityEngine.UI
 
         // See IMaterialModifier.GetModifiedMaterial
         // 实现 IMaterialModifier 的接口
-        // 1、若需要重新计算模板测试值，则用根 Canvas 和 本transfrom 重新计算模板测试深度（若不启用遮罩开关，则为0）。
-        // 2、
+        // 1、若需要重新计算模板测试深度，则用根 Canvas 和 本transfrom 重新计算模板测试深度（若不启用遮罩开关，则为0）。
+        // 2、若模板测试深度>0，且Mask存在且激活，则更新当前模板测试材质。
         public virtual Material GetModifiedMaterial(Material baseMaterial)
         {
-            var toUse = baseMaterial;   //先保存基础材质
+            var toUse = baseMaterial;   //默认使用基础材质
 
             if (m_ShouldRecalculateStencil)
             {
@@ -96,11 +96,14 @@ namespace UnityEngine.UI
             Mask maskComponent = GetComponent<Mask>();
             if (m_StencilValue > 0 && (maskComponent == null || !maskComponent.IsActive()))
             {
-                var maskMat = StencilMaterial.Add(toUse, (1 << m_StencilValue) - 1, StencilOp.Keep, CompareFunction.Equal, ColorWriteMask.All, (1 << m_StencilValue) - 1, 0);
-                StencilMaterial.Remove(m_MaskMaterial);
-                m_MaskMaterial = maskMat;
-                toUse = m_MaskMaterial;
+                //创建或获取新的模板测试材质
+                var maskMat = StencilMaterial.Add(toUse, (1 << m_StencilValue) - 1, StencilOp.Keep, CompareFunction.Equal, ColorWriteMask.All, (1 << m_StencilValue) - 1, 0);   
+                StencilMaterial.Remove(m_MaskMaterial); //移除原模板测试材质
+                m_MaskMaterial = maskMat;   //更新当前
+                toUse = m_MaskMaterial;     //新材质作为返回值
             }
+
+            //返回修改后的材质
             return toUse;
         }
 

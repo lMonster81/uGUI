@@ -73,28 +73,29 @@ namespace UnityEngine.UI
             return canvas != null ? canvas.transform : null;
         }
 
-        /// <summary>
-        /// Find the stencil depth for a given element.
-        /// </summary>
-        /// <param name="transform">The starting transform to search.</param>
-        /// <param name="stopAfter">Where the search of parents should stop</param>
-        /// <returns>What the proper stencil buffer index should be.</returns>
+        // Find the stencil depth for a given element.
+        // 通过给定的元素计算模板测试深度。 
+        // 参数"transform"：The starting transform to search.  开始搜索的 Transform。
+        // 参数"stopAfter"：Where the search of parents should stop. 结束搜索的 Transform。
         public static int GetStencilDepth(Transform transform, Transform stopAfter)
         {
-            var depth = 0;
+            var depth = 0;      //默认0
             if (transform == stopAfter)
-                return depth;
+                return depth;   //直接结束了，返回0
 
+            //从开始的 Transform 开始，递归向上查找父物体。
             var t = transform.parent;
             var components = ListPool<Mask>.Get();
             while (t != null)
             {
-                t.GetComponents<Mask>(components);
+                t.GetComponents<Mask>(components);      //获取t的 Mask 组件
                 for (var i = 0; i < components.Count; ++i)
                 {
-                    if (components[i] != null && components[i].MaskEnabled() && components[i].graphic.IsActive())
+                    // 若Mask存在 且 Mask开启（激活且关联的Graphic存在） 且 关联的Graphic存在激活。
+                    // 这里可以看出，深度指：有效的 Mask 嵌套的层数。
+                    if (components[i] != null && components[i].MaskEnabled() && components[i].graphic.IsActive())   
                     {
-                        ++depth;
+                        ++depth;    //深度+1
                         break;
                     }
                 }
