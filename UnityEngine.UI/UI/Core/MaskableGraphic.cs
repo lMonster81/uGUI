@@ -4,16 +4,15 @@ using UnityEngine.Rendering;
 
 namespace UnityEngine.UI
 {
-    /// <summary>
-    /// A Graphic that is capable of being masked out.
-    /// </summary>
+    // A Graphic that is capable of being masked out.
+    // 可被遮罩图形类
     public abstract class MaskableGraphic : Graphic, IClippable, IMaskable, IMaterialModifier
     {
         [NonSerialized]
-        protected bool m_ShouldRecalculateStencil = true;   //是否重新计算模板测试值（脏标记）
+        protected bool m_ShouldRecalculateStencil = true;   //是否重新计算模板测试深度（脏标记）
 
         [NonSerialized]
-        protected Material m_MaskMaterial;  //遮罩材质
+        protected Material m_MaskMaterial;  //Mask 材质
 
         [NonSerialized]
         private RectMask2D m_ParentMask;    //父 RectMask2D， 由 RectMask2D 在 RecalculateClipping 时为其所有“实现了接口 IClippable”的子物体设置 
@@ -25,7 +24,7 @@ namespace UnityEngine.UI
         // m_Maskable 的默认值是true，所以 Mask 下的图形是默认生效的。
         // 如果不想被 Mask，可以用脚本关闭 maskable 属性。
         [NonSerialized]
-        private bool m_Maskable = true;
+        private bool m_Maskable = true;     //遮罩启用开关
 
         // m_IncludeForMasking 已废弃。
         [NonSerialized]
@@ -41,7 +40,7 @@ namespace UnityEngine.UI
 
         // Callback issued when culling changes.
         // Called when the culling state of this MaskableGraphic either becomes culled or visible. You can use this to control other elements of your UI as culling happens.
-        // 剔除改变时的回调。
+        // 剔除改变时的回调。（供外部设置）
         // 当 MaskableGraphic 的剔除状态变成 被剔除（culled）或 可见时（visible）调用。
         // 当 剔除发生时，你可以使用它来控制UI的其他元素。
         public CullStateChangedEvent onCullStateChanged
@@ -71,25 +70,29 @@ namespace UnityEngine.UI
         protected bool m_ShouldRecalculate = true;
 
         [NonSerialized]
-        protected int m_StencilValue;   //模板测试值
+        protected int m_StencilValue;   //模板测试深度
 
-        /// <summary>
-        /// See IMaterialModifier.GetModifiedMaterial
-        /// </summary>
+        // See IMaterialModifier.GetModifiedMaterial
+        // 实现 IMaterialModifier 的接口
+        // 1、若需要重新计算模板测试值，则用根 Canvas 和 本transfrom 重新计算模板测试深度（若不启用遮罩开关，则为0）。
+        // 2、
         public virtual Material GetModifiedMaterial(Material baseMaterial)
         {
-            var toUse = baseMaterial;
+            var toUse = baseMaterial;   //先保存基础材质
 
             if (m_ShouldRecalculateStencil)
             {
-                var rootCanvas = MaskUtilities.FindRootSortOverrideCanvas(transform);
-                m_StencilValue = maskable ? MaskUtilities.GetStencilDepth(transform, rootCanvas) : 0;
-                m_ShouldRecalculateStencil = false;
+                var rootCanvas = MaskUtilities.FindRootSortOverrideCanvas(transform);  //获取根Canvas
+                m_StencilValue = maskable ? MaskUtilities.GetStencilDepth(transform, rootCanvas) : 0;  //计算模板测试深度
+                m_ShouldRecalculateStencil = false;     //脏标记置回false。
             }
 
             // if we have a enabled Mask component then it will
             // generate the mask material. This is an optimisation
             // it adds some coupling between components though :(
+            // 如果我们有一个启用的 Mask 组件，那么它将生成 Mask 材质。
+            // 这是一个优化，但它增加了一些组件间的耦合:(
+            // 这里的优化指：引入 StencilMaterial 类，对模板测试材质进行缓存管理。
             Mask maskComponent = GetComponent<Mask>();
             if (m_StencilValue > 0 && (maskComponent == null || !maskComponent.IsActive()))
             {
@@ -101,15 +104,23 @@ namespace UnityEngine.UI
             return toUse;
         }
 
-        /// <summary>
-        /// See IClippable.Cull
-        /// </summary>
+        // See IClippable.Cull
+        // 实现 IClippable 的接口
+        // 执行剔除
+        // 1、计算是否需要剔除。
+        // 2、更新剔除状态。
         public virtual void Cull(Rect clipRect, bool validRect)
         {
+            // 可完全剔除?：rect无效 或 clipRect 与 rootCanvasRect 不重叠（包括正反）
             var cull = !validRect || !clipRect.Overlaps(rootCanvasRect, true);
+            // 更新剔除状态
             UpdateCull(cull);
         }
 
+        // 更新剔除状态（是否剔除
+        // 1、设置 canvasRenderer.cull 是否剔除。
+        // 2、触发回调 m_OnCullStateChanged。
+        // 3、调用父类定义的生命周期方法 OnCullingChanged，处理父类中的事务。
         private void UpdateCull(bool cull)
         {
             if (canvasRenderer.cull != cull)
@@ -121,19 +132,26 @@ namespace UnityEngine.UI
             }
         }
 
-        /// <summary>
-        /// See IClippable.SetClipRect
-        /// </summary>
+        // See IClippable.SetClipRect
+        // 实现 IClippable 的接口
+        // 设置裁剪矩形。
+        // 若矩形有效，开启 canvasRenderer 的裁剪并设置裁剪矩形。 否则关闭 canvasRenderer 的裁剪。
         public virtual void SetClipRect(Rect clipRect, bool validRect)
         {
             if (validRect)
-                canvasRenderer.EnableRectClipping(clipRect);
+                canvasRenderer.EnableRectClipping(clipRect);    //（重要！裁剪生效的本质原因）
             else
                 canvasRenderer.DisableRectClipping();
         }
 
-        //1、执行父类 OnEnable
-        //2、m_ShouldRecalculateStencil 设为true（需要计算模板值）
+        // 1、执行父类 OnEnable
+        // ---（由 RectMask2D 影响）---
+        // 2、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        // 3、更新 m_ParentMask。
+        // 4、标记 材质脏标记 为脏。
+        //---------------------------------
+        // ---（由 Mask 影响）---
+        // 5、如果存在 Mask 组件，触发通知 StencilStateChanged。
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -141,12 +159,25 @@ namespace UnityEngine.UI
             UpdateClipParent();
             SetMaterialDirty();
 
+            //疑问??? 这个通知感觉应该写在 Graphic 类中。
+            //因为 Mask 关联的是 Graphic，而不是 MaskableGraphic。
+            //如果有一个类继承自 Graphic 而不是 MaskableGraphic，那么它还要调用这句。
             if (GetComponent<Mask>() != null)
             {
                 MaskUtilities.NotifyStencilStateChanged(this);
             }
         }
 
+        // 1、执行父类 OnDisable
+        // ---（由 RectMask2D 影响）---
+        // 2、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        // 3、标记 材质脏标记 为脏。
+        // 4、更新 m_ParentMask。
+        //---------------------------------
+        // ---（由 Mask 影响）---
+        // 5、从 StencilMaterial 中移除当前使用的模板测试材质。
+        // 6、m_MaskMaterial 设为 null。
+        // 7、如果存在 Mask 组件，触发通知 StencilStateChanged。
         protected override void OnDisable()
         {
             base.OnDisable();
@@ -156,6 +187,9 @@ namespace UnityEngine.UI
             StencilMaterial.Remove(m_MaskMaterial);
             m_MaskMaterial = null;
 
+            //疑问??? 这个通知感觉应该写在 Graphic 类中。
+            //因为 Mask 关联的是 Graphic，而不是 MaskableGraphic。
+            //如果有一个类继承自 Graphic 而不是 MaskableGraphic，那么它还要调用这句。
             if (GetComponent<Mask>() != null)
             {
                 MaskUtilities.NotifyStencilStateChanged(this);
@@ -163,6 +197,12 @@ namespace UnityEngine.UI
         }
 
 #if UNITY_EDITOR
+        // 重写 Graphic 方法。
+        // 编辑器下，脚本被加载、或 Inspector 中的任何值被修改时，方法被调用
+        // 1、调用父类 OnValidate
+        // 2、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        // 3、更新 m_ParentMask。
+        // 4、标记 材质脏标记 为脏。
         protected override void OnValidate()
         {
             base.OnValidate();
@@ -172,7 +212,13 @@ namespace UnityEngine.UI
         }
 
 #endif
-
+        // 重写 Graphic 方法。
+        // 父物体改变后（具体看UIBehaviour里的注释），
+        // 1、调用父类 OnTransformParentChanged。
+        // 2、若物体激活且组件启用：
+        //   ⑴、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        //   ⑵、更新 m_ParentMask。
+        //   ⑶、标记 材质脏标记 为脏。
         protected override void OnTransformParentChanged()
         {
             base.OnTransformParentChanged();
@@ -189,6 +235,13 @@ namespace UnityEngine.UI
         [Obsolete("Not used anymore.", true)]
         public virtual void ParentMaskStateChanged() {}
 
+        // 重写 Graphic 方法。
+        // 当关联的 Canvas 在 Hierarchy 上变化时（具体看UIBehaviour里的注释）
+        // 1、调用父类 OnTransformParentChanged。
+        // 2、若物体激活且组件启用：
+        //   ⑴、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        //   ⑵、更新 m_ParentMask。
+        //   ⑶、标记 材质脏标记 为脏。
         protected override void OnCanvasHierarchyChanged()
         {
             base.OnCanvasHierarchyChanged();
@@ -202,21 +255,27 @@ namespace UnityEngine.UI
         }
 
         readonly Vector3[] m_Corners = new Vector3[4];
+        // rectTransform 在其 Root Canvas 上的矩形
         private Rect rootCanvasRect
         {
             get
             {
-                rectTransform.GetWorldCorners(m_Corners);
-
-                if (canvas)
+                // 获取 rectTransform 四个转角的世界坐标
+                // 4 个顶点的 返回数组是顺时针的。它从左下开始，然后到左上， 然后到右上，最后到右下。
+                // GetWorldCorners: https://docs.unity3d.com/cn/2020.1/ScriptReference/RectTransform.GetWorldCorners.html
+                rectTransform.GetWorldCorners(m_Corners);   
+                
+                if (canvas)  // Graphic 当前所属的 Canvas
                 {
-                    Matrix4x4 mat = canvas.rootCanvas.transform.worldToLocalMatrix;
+                    Matrix4x4 mat = canvas.rootCanvas.transform.worldToLocalMatrix;     //通过当前所属Canvas找到根Canvas，再取到世界坐标到根Canvas本地坐标的变换矩阵。
                     for (int i = 0; i < 4; ++i)
-                        m_Corners[i] = mat.MultiplyPoint(m_Corners[i]);
+                        m_Corners[i] = mat.MultiplyPoint(m_Corners[i]);     //将 rectTransform 的四个顶点，变换到 根Canvas 的坐标系下。
                 }
 
                 // bounding box is now based on the min and max of all corners (case 1013182)
+                // 边框盒子 现在是基于 四个转角的最大和最小的XY坐标。
 
+                // 用转角 1、2、3 与 转角 0 比较，即可求出四个转角的最小XY 和 最大 XY。
                 Vector2 min = m_Corners[0];
                 Vector2 max = m_Corners[0];
                 for (int i = 1; i < 4; i++)
@@ -227,6 +286,7 @@ namespace UnityEngine.UI
                     max.y = Mathf.Max(m_Corners[i].y, max.y);
                 }
 
+                //返回 Rect
                 return new Rect(min, max - min);
             }
         }
@@ -238,34 +298,42 @@ namespace UnityEngine.UI
             var newParent = (maskable && IsActive()) ? MaskUtilities.GetRectMaskForClippable(this) : null;
 
             // if the new parent is different OR is now inactive
-            if (m_ParentMask != null && (newParent != m_ParentMask || !newParent.IsActive()))
+            // 若新的父节点存在 且（与之前不同 或 当前未激活）
+            if (m_ParentMask != null && (newParent != m_ParentMask || !newParent.IsActive())) //这里不会未激活吧！。MaskUtilities.GetRectMaskForClippable 中取到的都是激活的。
             {
-                m_ParentMask.RemoveClippable(this);
-                UpdateCull(false);
+                m_ParentMask.RemoveClippable(this); //将当前物体从原 RectMask2D 的引用中移除
+                UpdateCull(false);  // 更新剔除状态为不要剔除
             }
 
             // don't re-add it if the newparent is inactive
+            // 仅 newparent 是激活时才建立父子引用关系
             if (newParent != null && newParent.IsActive())
-                newParent.AddClippable(this);
+                newParent.AddClippable(this);   // 将当前物体加入新 RectMask2D 的引用中
 
-            m_ParentMask = newParent;
+            m_ParentMask = newParent;   //更新 ParentMask 为新的。
         }
 
-        /// <summary>
-        /// See IClippable.RecalculateClipping
-        /// </summary>
+        // See IClippable.RecalculateClipping
+        // 实现 IClippable 的接口
+        // 1、更新 m_ParentMask
         public virtual void RecalculateClipping()
         {
             UpdateClipParent();
         }
 
-        /// <summary>
-        /// See IMaskable.RecalculateMasking
-        /// </summary>
+        // See IMaskable.RecalculateMasking
+        // 实现 IMaskable 的接口
+        // 1、移除材质引用
+        // 2、m_MaskMaterial 设为 null。 
+        // 3、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        // 4、标记 材质脏标记 为脏。
         public virtual void RecalculateMasking()
         {
             // Remove the material reference as either the graphic of the mask has been enable/ disabled.
             // This will cause the material to be repopulated from the original if need be. (case 994413)
+            // 移除材质引用，
+            // 父 Mask 组件启用/禁用时；或与父 Mask 组件关联的 MaskableGraphic 被启用/禁用时（实际上，Mask 组件关联的是 Graphic）。 
+            // 这将导致材质从原材质重新填充，如果需要的话。(例 994413) （即标记 材质脏标记 为脏，然后GetModifiedMaterial被重新调用）
             StencilMaterial.Remove(m_MaskMaterial);
             m_MaskMaterial = null;
             m_ShouldRecalculateStencil = true;

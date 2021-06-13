@@ -3,9 +3,8 @@ using UnityEngine.EventSystems;
 
 namespace UnityEngine.UI
 {
-    /// <summary>
-    /// Mask related utility class. This class provides masking-specific utility functions.
-    /// </summary>
+    // Mask related utility class. This class provides masking-specific utility functions.
+    // Mask 相关的工具类。该类提供了特定于 Mask 的工具函数。
     public class MaskUtilities
     {
         /// <summary>
@@ -48,15 +47,15 @@ namespace UnityEngine.UI
             ListPool<Component>.Release(components);
         }
 
-        /// <summary>
-        /// Find a root Canvas.
-        /// </summary>
-        /// <param name="start">Transform to start the search at going up the hierarchy.</param>
-        /// <returns>Finds either the most root canvas, or the first canvas that overrides sorting.</returns>
+        // Find a root Canvas.
+        // Finds either the most root canvas, or the first canvas that overrides sorting.
+        // 查找根 Canvas。
+        // 查找最深根的 Canvas，或第一个“使用独立绘制顺序”的 Canvas。
+        // 参数"start"：Transform to start the search at going up the hierarchy.  开始在 Hierarchy 上向上搜索的 Transform。
         public static Transform FindRootSortOverrideCanvas(Transform start)
         {
             var canvasList = ListPool<Canvas>.Get();
-            start.GetComponentsInParent(false, canvasList);
+            start.GetComponentsInParent(false, canvasList); //获取所有父Canvas（结果是从下往上的）
             Canvas canvas = null;
 
             for (int i = 0; i < canvasList.Count; ++i)
@@ -64,11 +63,13 @@ namespace UnityEngine.UI
                 canvas = canvasList[i];
 
                 // We found the canvas we want to use break
+                // 找到“使用独立绘制顺序”的 Canvas，遂 break
                 if (canvas.overrideSorting)
                     break;
             }
             ListPool<Canvas>.Release(canvasList);
 
+            //返回目标 Canvas 的 Transform。
             return canvas != null ? canvas.transform : null;
         }
 
@@ -139,7 +140,7 @@ namespace UnityEngine.UI
         //    若是 clippable 自身上的 RectMask2D，则跳过当前继续查找。
         //    若 RectMask2D 组件的物体未激活，或组件未启用，则跳过当前继续查找。
         //    取 clippable 所有的父 Canvas 组件。进行遍历判断。
-        //       看 clippable 与 RectMask2D 层级之间是否夹有使用独立 SortOrder 的 Canvas。
+        //       看 clippable 与 RectMask2D 层级之间是否夹有“使用独立绘制顺序”的 Canvas。
         //       若是，则说明不存在生效的 RectMask2D。返回null（依次打断内层循环、外层循环）。
         //    若存在生效的 RectMask2D 则返回。
         public static RectMask2D GetRectMaskForClippable(IClippable clippable)
@@ -169,13 +170,13 @@ namespace UnityEngine.UI
                     clippable.gameObject.GetComponentsInParent(false, canvasComponents);    // 取 clippable 所有的父 Canvas 组件。
                     for (int i = canvasComponents.Count - 1; i >= 0; i--)        //遍历 Canvas
                     {
-                        // 该 RectMask2D 不与 该 Canvas 同物体，也不是该 Canvas 的子孙物体 且 该 Canvas 使用独立的 SortOrder。
-                        // 即：若“使用独立 SortOrder”的 Canvas，出现在 RectMask2D 和 clippable 物体的中间。 则此时应使 RectMask2D 不对 clippable 生效。
+                        // 该 RectMask2D 不与 该 Canvas 同物体，也不是该 Canvas 的子孙物体 且 该 Canvas 使用独立绘制顺序。
+                        // 即：若“使用独立绘制顺序”的 Canvas，出现在 RectMask2D 和 clippable 物体的中间。 则此时应使 RectMask2D 不对 clippable 生效。
                         // 如，以下层级关系中, 由于Canvas2的存在，RectMask2D 将 不对 Image 生效。
                         //---------------------------------------------------------
                         // --Canvas1
                         // ----RectMask2D
-                        // ------Canvas2（使用独立的SortOrder）
+                        // ------Canvas2（使用独立绘制顺序）
                         // --------Image（clippable）
                         //---------------------------------------------------------
                         if (!IsDescendantOrSelf(canvasComponents[i].transform, componentToReturn.transform) && canvasComponents[i].overrideSorting)

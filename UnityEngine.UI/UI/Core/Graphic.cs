@@ -791,7 +791,7 @@ namespace UnityEngine.UI
         // 方法的目的：确定本 Graphic 的物体 是否被射线检测到!!!？
         // 1、若未激活/启动，则直接返回false。
         // 2、从当前 Graphic 开始向其父物体递归遍历检测，直到parent为null或被提前打断。
-        // 3、若当前物体存在一个“使用自己独立 SortOrder” 的 Canvas 组件，则使本次执行完后结束递归遍历（提前打断）。（NRatel原因/结论：检测以相同 SortOrder 为基准，对嵌套的 Canvas 分割断层。
+        // 3、若当前物体存在一个“使用独立绘制顺序” 的 Canvas 组件，则使本次执行完后结束递归遍历（提前打断）。（NRatel原因/结论：检测以相同 SortOrder 为基准，对嵌套的 Canvas 分割断层。
         // 4、若当前物体不存在一个“实现了接口 ICanvasRaycastFilter” 的组件，则跳过当前，继续检测其父物体。（NRatel原因/结论：不实现该接口的组件无法被射线检测到。
         // 5、若当前物体存在一个“ignoreParentGroups == true” 的 CanvasGroup 组件，则在递归遍历过程中只检测当前 CanvasGroup 这一层。
         public virtual bool Raycast(Vector2 sp, Camera eventCamera)
@@ -812,7 +812,7 @@ namespace UnityEngine.UI
                 {
                     var canvas = components[i] as Canvas;  
                     if (canvas != null && canvas.overrideSorting)
-                        continueTraversal = false;  //若当前物体存在一个“使用自己独立 SortOrder” 的 Canvas 组件，则使本次执行完后结束递归遍历（提前打断）。
+                        continueTraversal = false;  //若当前物体存在一个“使用独立绘制顺序” 的 Canvas 组件，则使本次执行完后结束递归遍历（提前打断）。
 
                     var filter = components[i] as ICanvasRaycastFilter;
                     if (filter == null)
