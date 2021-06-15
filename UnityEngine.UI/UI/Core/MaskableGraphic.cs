@@ -82,7 +82,7 @@ namespace UnityEngine.UI
 
             if (m_ShouldRecalculateStencil)
             {
-                var rootCanvas = MaskUtilities.FindRootSortOverrideCanvas(transform);  //获取根Canvas
+                var rootCanvas = MaskUtilities.FindRootSortOverrideCanvas(transform);  //获取最深根的 Canvas，或第一个“使用独立绘制顺序”的 Canvas。
                 m_StencilValue = maskable ? MaskUtilities.GetStencilDepth(transform, rootCanvas) : 0;  //计算模板测试深度
                 m_ShouldRecalculateStencil = false;     //脏标记置回false。
             }
@@ -154,7 +154,7 @@ namespace UnityEngine.UI
         // 4、标记 材质脏标记 为脏。
         //---------------------------------
         // ---（由 Mask 影响）---
-        // 5、如果存在 Mask 组件，触发通知 StencilStateChanged。
+        // 5、如果存在 Mask 组件，通知 StencilStateChanged。（通知所有实现 IMaskable 接口的子物体重新计算遮罩。
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -180,7 +180,7 @@ namespace UnityEngine.UI
         // ---（由 Mask 影响）---
         // 5、从 StencilMaterial 中移除当前使用的模板测试材质。
         // 6、m_MaskMaterial 设为 null。
-        // 7、如果存在 Mask 组件，触发通知 StencilStateChanged。
+        // 7、如果存在 Mask 组件，通知 StencilStateChanged。（通知所有实现 IMaskable 接口的子物体重新计算遮罩。
         protected override void OnDisable()
         {
             base.OnDisable();
@@ -318,6 +318,7 @@ namespace UnityEngine.UI
 
         // See IClippable.RecalculateClipping
         // 实现 IClippable 的接口
+        // 重新计算裁剪。
         // 1、更新 m_ParentMask
         public virtual void RecalculateClipping()
         {

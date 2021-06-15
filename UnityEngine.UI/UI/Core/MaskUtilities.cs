@@ -8,30 +8,28 @@ namespace UnityEngine.UI
     // Mask 相关指：Mask 和 RectMask2D。
     public class MaskUtilities
     {
-        /// <summary>
-        /// Notify all IClippables under the given component that they need to recalculate clipping.
-        /// </summary>
-        /// <param name="mask">The object thats changed for whose children should be notified.</param>
+        // Notify all IClippables under the given component that they need to recalculate clipping.
+        // 通知给定组件下的所有 IClippables，它们需要重新计算裁剪。
+        // 参数"mask"：The object thats changed for whose children should be notified. //改变的、需要通知其子物体重新计算裁剪的对象。
         public static void Notify2DMaskStateChanged(Component mask)
         {
             var components = ListPool<Component>.Get();
-            mask.GetComponentsInChildren(components);
-            for (var i = 0; i < components.Count; i++)
+            mask.GetComponentsInChildren(components);   //取所有子物体的所有组件（包含自身）
+            for (var i = 0; i < components.Count; i++)  //遍历
             {
-                if (components[i] == null || components[i].gameObject == mask.gameObject)
+                if (components[i] == null || components[i].gameObject == mask.gameObject) //排除组件null组件 和 自身
                     continue;
 
                 var toNotify = components[i] as IClippable;
-                if (toNotify != null)
-                    toNotify.RecalculateClipping();
+                if (toNotify != null)   
+                    toNotify.RecalculateClipping(); // IClippable 类型的组件重新计算裁剪。
             }
             ListPool<Component>.Release(components);
         }
 
-        /// <summary>
-        /// Notify all IMaskable under the given component that they need to recalculate masking.
-        /// </summary>
-        /// <param name="mask">The object thats changed for whose children should be notified.</param>
+        // Notify all IMaskable under the given component that they need to recalculate masking.
+        // 通知给定组件下的所有 IMaskables，它们需要重新计算遮罩。
+        // 参数"mask"：The object thats changed for whose children should be notified. //改变的、需要通知其子物体重新计算遮罩的对象。
         public static void NotifyStencilStateChanged(Component mask)
         {
             var components = ListPool<Component>.Get();
@@ -75,7 +73,7 @@ namespace UnityEngine.UI
         }
 
         // Find the stencil depth for a given element.
-        // 通过给定的元素计算模板测试深度。 
+        // 通过给定的元素计算模板测试深度。 深度指：有效的 Mask 嵌套的层数。第一层为0。
         // 参数"transform"：The starting transform to search.  开始搜索的 Transform。
         // 参数"stopAfter"：Where the search of parents should stop. 结束搜索的 Transform。
         public static int GetStencilDepth(Transform transform, Transform stopAfter)

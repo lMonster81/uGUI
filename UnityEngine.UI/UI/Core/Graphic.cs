@@ -11,7 +11,8 @@ using UnityEngine.UI.CoroutineTween;
 namespace UnityEngine.UI
 {
     // Base class for all UI components that should be derived from when creating new Graphic types.
-    //创建新的 Graphic 图形类型时应该派生的、所有UI组件的基类。
+    // 创建新的 Graphic 图形类型时应该派生的、所有UI组件的基类。
+    // 当创建可视化UI组件时，您应该从这个类继承。
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CanvasRenderer))]
     [RequireComponent(typeof(RectTransform))]
@@ -311,12 +312,13 @@ namespace UnityEngine.UI
             SetAllDirty();
         }
 
-        /// <summary>
-        /// Absolute depth of the graphic, used by rendering and events -- lowest to highest.
-        /// </summary>
+        // Absolute depth of the graphic, used by rendering and events -- lowest to highest.
+        // The depth is relative to the first root canvas.
+        // This value is used to determine draw and event ordering.
+        // Graphic 的绝对深度，渲染和事件使用它——从低到高。
+        // 深度总是相对于第一个根 Canvas。
+        // 这个值用于确定绘制和事件排序。
         /// <example>
-        /// The depth is relative to the first root canvas.
-        ///
         /// Canvas
         ///  Graphic - 1
         ///  Graphic - 2
@@ -324,14 +326,11 @@ namespace UnityEngine.UI
         ///     Graphic - 3
         ///     Graphic - 4
         ///  Graphic - 5
-        ///
-        /// This value is used to determine draw and event ordering.
         /// </example>
         public int depth { get { return canvasRenderer.absoluteDepth; } }
 
-        /// <summary>
-        /// The RectTransform component used by the Graphic. Cached for speed.
-        /// </summary>
+        // The RectTransform component used by the Graphic.Cached for speed.
+        // Graphic 关联的 RectTransform 组件。为了速度而缓存。
         public RectTransform rectTransform
         {
             get
@@ -399,20 +398,16 @@ namespace UnityEngine.UI
                 return m_CanvasRenderer;
             }
         }
-
-        /// <summary>
-        /// Returns the default material for the graphic.
-        /// 本Graphic默认采用的材质，默认为defaultGraphicMaterial（可重写）
-        /// </summary>
+        
+        // Returns the default material for the graphic.
+        // 本Graphic默认采用的材质，默认为defaultGraphicMaterial（可重写）
         public virtual Material defaultMaterial
         {
             get { return defaultGraphicMaterial; }
         }
-
-        /// <summary>
-        /// The Material set by the user
-        /// 当前材质set/get。set时触发SetMaterialDirty(); get时若为空则取defaultMaterial（可重写）
-        /// </summary>
+        
+        // The Material set by the user
+        // 当前材质set/get。set时触发SetMaterialDirty(); get时若为空则取defaultMaterial（可重写）
         public virtual Material material
         {
             get
@@ -439,11 +434,11 @@ namespace UnityEngine.UI
         {
             get
             {
-                var components = ListPool<Component>.Get();
-                GetComponents(typeof(IMaterialModifier), components);
+                var components = ListPool<Component>.Get(); 
+                GetComponents(typeof(IMaterialModifier), components);   //取自身所有实现了 IMaterialModifier 接口的组件。
 
                 var currentMat = material;
-                for (var i = 0; i < components.Count; i++)
+                for (var i = 0; i < components.Count; i++)  //遍历处理，（即：有多个时只有一个会生效，其他的被覆盖。
                     currentMat = (components[i] as IMaterialModifier).GetModifiedMaterial(currentMat);
                 ListPool<Component>.Release(components);
                 return currentMat;

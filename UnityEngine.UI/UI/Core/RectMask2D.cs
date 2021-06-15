@@ -93,7 +93,7 @@ namespace UnityEngine.UI
         // 1、调用父类 OnEnable。
         // 2、m_ShouldRecalculateClipRects 设为 true（需要重新计算 m_Clippers）。
         // 3、在 ClipperRegistry 注册。
-        // 4、通知 2DMaskStateChanged。
+        // 4、通知 2DMaskStateChanged（通知所有实现 IClippable 接口的子物体重新计算裁剪。
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -106,7 +106,7 @@ namespace UnityEngine.UI
         // 2、清空 m_MaskableTargets。
         // 3、清空 m_Clippers。
         // 4、移除 ClipperRegistry 中的注册。
-        // 5、通知 2DMaskStateChanged。
+        // 5、通知 2DMaskStateChanged。（通知所有实现 IClippable 接口的子物体重新计算裁剪。
         protected override void OnDisable()
         {
             // we call base OnDisable first here as we need to have the IsActive return the correct value when we notify the children that the mask state has changed.
@@ -144,8 +144,7 @@ namespace UnityEngine.UI
             if (!isActiveAndEnabled)   //若未激活或未启用，则有效（不过滤）
                 return true;
 
-            // 若激活且启用，则检查投射点是否在本 rectTransform 的矩形内。
-            // 在则有效
+            // 若激活且启用，则检查投射点是否在本 rectTransform 的矩形内。 在则有效。
             return RectTransformUtility.RectangleContainsScreenPoint(rectTransform, sp, eventCamera);
         }
 
@@ -206,7 +205,7 @@ namespace UnityEngine.UI
             RenderMode renderMode = Canvas.rootCanvas.renderMode;
             bool maskIsCulled = (renderMode == RenderMode.ScreenSpaceCamera || renderMode == RenderMode.ScreenSpaceOverlay) && !clipRect.Overlaps(rootCanvasRect, true);
 
-            //被剔除
+            //应该被剔除
             if (maskIsCulled)
             {
                 // Children are only displayed when inside the mask.
