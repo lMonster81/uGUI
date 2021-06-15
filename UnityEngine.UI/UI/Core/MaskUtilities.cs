@@ -5,6 +5,7 @@ namespace UnityEngine.UI
 {
     // Mask related utility class. This class provides masking-specific utility functions.
     // Mask 相关的工具类。该类提供了特定于 Mask 的工具函数。
+    // Mask 相关指：Mask 和 RectMask2D。
     public class MaskUtilities
     {
         /// <summary>
@@ -150,7 +151,7 @@ namespace UnityEngine.UI
             List<Canvas> canvasComponents = ListPool<Canvas>.Get();
             RectMask2D componentToReturn = null;
             
-            clippable.gameObject.GetComponentsInParent(false, rectMaskComponents);  // 取 clippable 所有的父 RectMask2D 组件（不包含未激活的）。
+            clippable.gameObject.GetComponentsInParent(false, rectMaskComponents);  // 取 clippable 所有的父 RectMask2D 组件（不包含未激活的）（包含自身）。
 
             if (rectMaskComponents.Count > 0)
             {
@@ -162,13 +163,13 @@ namespace UnityEngine.UI
                         componentToReturn = null;
                         continue;
                     }
-                    if (!componentToReturn.isActiveAndEnabled)      //若 RectMask2D 组件的物体未激活或组件未启用，则跳过。可细微优化，取组件时已经是未激活的了。
+                    if (!componentToReturn.isActiveAndEnabled)      //若 RectMask2D 组件的物体未激活或组件未启用，则跳过。（实际上似乎多余判断，因为取组件时已经不包含未激活的了。
                     {
                         componentToReturn = null;
                         continue;
                     }
                     
-                    clippable.gameObject.GetComponentsInParent(false, canvasComponents);    // 取 clippable 所有的父 Canvas 组件。
+                    clippable.gameObject.GetComponentsInParent(false, canvasComponents);    // 取 clippable 所有的父 Canvas 组件（不包含未激活的）（包含自身）。
                     for (int i = canvasComponents.Count - 1; i >= 0; i--)        //遍历 Canvas
                     {
                         // 该 RectMask2D 不与 该 Canvas 同物体，也不是该 Canvas 的子孙物体 且 该 Canvas 使用独立绘制顺序。
@@ -197,29 +198,39 @@ namespace UnityEngine.UI
             return componentToReturn;
         }
 
-        /// <summary>
-        /// Search for all RectMask2D that apply to the given RectMask2D (includes self).
-        /// </summary>
-        /// <param name="clipper">Starting clipping object.</param>
-        /// <param name="masks">The list of Rect masks</param>
+        // Search for all RectMask2D that apply to the given RectMask2D (includes self).
+        // 查找所有适应于给定 RectMask2D 的 RectMask2D。
+        // 适应指：与给定 Rectmask2D 共同实际生效的父 RectMask2D。（中间未穿插“使用独立绘制顺序”的 Canvas）
+        // 参数"clipper"：Starting clipping object.   开始裁剪的对象。
+        // 参数"masks"：The list of Rect masks</param>   RectMask2D 结果列表。
         public static void GetRectMasksForClip(RectMask2D clipper, List<RectMask2D> masks)
         {
             masks.Clear();
 
             List<Canvas> canvasComponents = ListPool<Canvas>.Get();
             List<RectMask2D> rectMaskComponents = ListPool<RectMask2D>.Get();
-            clipper.transform.GetComponentsInParent(false, rectMaskComponents);
+            clipper.transform.GetComponentsInParent(false, rectMaskComponents);     // 取 clipper 所有的父 RectMask2D 组件（不包含未激活的）（包含自身）。
 
             if (rectMaskComponents.Count > 0)
             {
-                clipper.transform.GetComponentsInParent(false, canvasComponents);
-                for (int i = rectMaskComponents.Count - 1; i >= 0; i--)
+                clipper.transform.GetComponentsInParent(false, canvasComponents);   // 取 clipper 所有的父 Canvas 组件（不包含未激活的）（包含自身）。
+                for (int i = rectMaskComponents.Count - 1; i >= 0; i--)     //遍历父 RectMask2D 列表
                 {
-                    if (!rectMaskComponents[i].IsActive())
+                    if (!rectMaskComponents[i].IsActive())    //若未激活，则跳过。（实际上似乎多余判断，因为取组件时已经不包含未激活的了。     
                         continue;
-                    bool shouldAdd = true;
-                    for (int j = canvasComponents.Count - 1; j >= 0; j--)
+
+                    bool shouldAdd = true;  //是否应该加入结果列表
+                    for (int j = canvasComponents.Count - 1; j >= 0; j--)   //遍历父 Canvas  
                     {
+                        // 该 RectMask2D 不与 该 Canvas 同物体，也不是该 Canvas 的子孙物体 且 该 Canvas 使用独立绘制顺序。
+                        // 即：若“使用独立绘制顺序”的 Canvas，出现在 RectMask2D 和 clippable 物体的中间。 则此时应使 RectMask2D 不对 clippable 生效。
+                        // 如，以下层级关系中, 由于Canvas2的存在，RectMask2D 将 不对 Image 生效。
+                        //---------------------------------------------------------
+                        // --Canvas1
+                        // ----RectMask2D
+                        // ------Canvas2（使用独立绘制顺序）
+                        // --------Image（clippable）
+                        //---------------------------------------------------------
                         if (!IsDescendantOrSelf(canvasComponents[j].transform, rectMaskComponents[i].transform) && canvasComponents[j].overrideSorting)
                         {
                             shouldAdd = false;
@@ -227,7 +238,7 @@ namespace UnityEngine.UI
                         }
                     }
                     if (shouldAdd)
-                        masks.Add(rectMaskComponents[i]);
+                        masks.Add(rectMaskComponents[i]);   //加入返回列表
                 }
             }
 

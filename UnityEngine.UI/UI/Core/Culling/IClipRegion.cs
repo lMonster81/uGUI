@@ -30,13 +30,13 @@ namespace UnityEngine.UI
         // Clip and cull the IClippable given a specific clipping rect
         // 裁剪和剔除 IClippable 给定的裁剪矩形
         // 参数"clipRect"：The Rectangle in which to clip against. 裁剪本物体的矩形 （来自RectMask2D）。
-        // 参数"validRect"：Is the Rect valid. If not then the rect has 0 size. 矩形是否有效。若无效，则矩形的大小视为0（不裁剪）。
+        // 参数"validRect"：Is the Rect valid. If not then the rect has 0 size. 裁剪矩形是否有效。若无效，则矩形的大小视为0（不裁剪）。
         void Cull(Rect clipRect, bool validRect);
 
         // Set the clip rect for the IClippable.
         // 设置裁剪矩形。
         // 参数"value"：The Rectangle for the clipping.  裁剪本物体的矩形 （来自RectMask2D）。
-        // 参数"validRect"：Is the rect valid.  矩形是否有效。
+        // 参数"validRect"：Is the rect valid.  裁剪矩形是否有效。
         void SetClipRect(Rect value, bool validRect);
     }
 }

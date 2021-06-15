@@ -149,7 +149,7 @@ namespace UnityEngine.UI
 
         // 1、执行父类 OnEnable
         // ---（由 RectMask2D 影响）---
-        // 2、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        // 2、m_ShouldRecalculateStencil 设为true（需要重新计算模板测试深度）。
         // 3、更新 m_ParentMask。
         // 4、标记 材质脏标记 为脏。
         //---------------------------------
@@ -173,7 +173,7 @@ namespace UnityEngine.UI
 
         // 1、执行父类 OnDisable
         // ---（由 RectMask2D 影响）---
-        // 2、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        // 2、m_ShouldRecalculateStencil 设为true（需要重新计算模板测试深度）。
         // 3、标记 材质脏标记 为脏。
         // 4、更新 m_ParentMask。
         //---------------------------------
@@ -203,7 +203,7 @@ namespace UnityEngine.UI
         // 重写 Graphic 方法。
         // 编辑器下，脚本被加载、或 Inspector 中的任何值被修改时，方法被调用
         // 1、调用父类 OnValidate
-        // 2、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        // 2、m_ShouldRecalculateStencil 设为true（需要重新计算模板测试深度）。
         // 3、更新 m_ParentMask。
         // 4、标记 材质脏标记 为脏。
         protected override void OnValidate()
@@ -219,7 +219,7 @@ namespace UnityEngine.UI
         // 父物体改变后（具体看UIBehaviour里的注释），
         // 1、调用父类 OnTransformParentChanged。
         // 2、若物体激活且组件启用：
-        //   ⑴、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        //   ⑴、m_ShouldRecalculateStencil 设为true（需要重新计算模板测试深度）。
         //   ⑵、更新 m_ParentMask。
         //   ⑶、标记 材质脏标记 为脏。
         protected override void OnTransformParentChanged()
@@ -242,7 +242,7 @@ namespace UnityEngine.UI
         // 当关联的 Canvas 在 Hierarchy 上变化时（具体看UIBehaviour里的注释）
         // 1、调用父类 OnTransformParentChanged。
         // 2、若物体激活且组件启用：
-        //   ⑴、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        //   ⑴、m_ShouldRecalculateStencil 设为true（需要重新计算模板测试深度）。
         //   ⑵、更新 m_ParentMask。
         //   ⑶、标记 材质脏标记 为脏。
         protected override void OnCanvasHierarchyChanged()
@@ -328,7 +328,7 @@ namespace UnityEngine.UI
         // 实现 IMaskable 的接口
         // 1、移除材质引用
         // 2、m_MaskMaterial 设为 null。 
-        // 3、m_ShouldRecalculateStencil 设为true（需要计算模板测试深度）。
+        // 3、m_ShouldRecalculateStencil 设为true（需要重新计算模板测试深度）。
         // 4、标记 材质脏标记 为脏。
         public virtual void RecalculateMasking()
         {

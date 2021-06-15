@@ -5,6 +5,7 @@ namespace UnityEngine.UI
         readonly Vector3[] m_WorldCorners = new Vector3[4];
         readonly Vector3[] m_CanvasCorners = new Vector3[4];
 
+        //获取 t在Canvas下的 rect (包括位置和大小)
         public Rect GetCanvasRect(RectTransform t, Canvas c)
         {
             if (c == null)

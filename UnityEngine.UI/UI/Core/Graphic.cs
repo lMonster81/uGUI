@@ -475,7 +475,7 @@ namespace UnityEngine.UI
         //5、标记为全脏。
         protected override void OnEnable()
         {
-            base.OnEnable(); //疑问??? 父方法是空的为何要调？
+            base.OnEnable();   //疑问??? 父方法是空的为何要调？
             CacheCanvas();
             GraphicRegistry.RegisterGraphicForCanvas(canvas, this);
 
