@@ -170,11 +170,13 @@ namespace UnityEngine.UI
             if (desiredStencilBit == 1)  // （ 即 stencilDepth == 0）。
             {
                 //创建或获取新的模板测试材质
+                //参数：总是替换，若显示MaskGraphic则使用完整颜色，否则为0。
                 var maskMaterial = StencilMaterial.Add(baseMaterial, 1, StencilOp.Replace, CompareFunction.Always, m_ShowMaskGraphic ? ColorWriteMask.All : 0);
                 StencilMaterial.Remove(m_MaskMaterial); //移除旧的
                 m_MaskMaterial = maskMaterial;  //更新当前引用
 
                 //创建或获取新的模板测试材质 unmaskMaterial
+                //参数：总是为0，若显示MaskGraphic则使用完整颜色，否则为0。
                 var unmaskMaterial = StencilMaterial.Add(baseMaterial, 1, StencilOp.Zero, CompareFunction.Always, 0);
                 StencilMaterial.Remove(m_UnmaskMaterial); //移除旧的
                 m_UnmaskMaterial = unmaskMaterial;  //更新当前引用
@@ -185,16 +187,20 @@ namespace UnityEngine.UI
             }
 
             //otherwise we need to be a bit smarter and set some read / write masks
+            // 否则。需要设置一些 read / write 的遮罩。
+            //创建或获取新的模板测试材质
             var maskMaterial2 = StencilMaterial.Add(baseMaterial, desiredStencilBit | (desiredStencilBit - 1), StencilOp.Replace, CompareFunction.Equal, m_ShowMaskGraphic ? ColorWriteMask.All : 0, desiredStencilBit - 1, desiredStencilBit | (desiredStencilBit - 1));
             StencilMaterial.Remove(m_MaskMaterial);
             m_MaskMaterial = maskMaterial2;
 
             graphic.canvasRenderer.hasPopInstruction = true;
+
+            //创建或获取新的模板测试材质 unmaskMaterial
             var unmaskMaterial2 = StencilMaterial.Add(baseMaterial, desiredStencilBit - 1, StencilOp.Replace, CompareFunction.Equal, 0, desiredStencilBit - 1, desiredStencilBit | (desiredStencilBit - 1));
-            StencilMaterial.Remove(m_UnmaskMaterial);
-            m_UnmaskMaterial = unmaskMaterial2;
+            StencilMaterial.Remove(m_UnmaskMaterial);   //移除旧的
+            m_UnmaskMaterial = unmaskMaterial2; //更新当前引用
             graphic.canvasRenderer.popMaterialCount = 1;     // popMaterialCount：CanvasRenderer组件可用的材质数量，用于内部遮罩。
-            graphic.canvasRenderer.SetPopMaterial(m_UnmaskMaterial, 0);
+            graphic.canvasRenderer.SetPopMaterial(m_UnmaskMaterial, 0); //SetPopMaterial：设置 canvasRenderer 的材质，用于内部遮罩。
 
             return m_MaskMaterial;  //返回修改后的材质
         }

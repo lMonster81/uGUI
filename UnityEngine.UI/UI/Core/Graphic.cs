@@ -102,49 +102,12 @@ namespace UnityEngine.UI
         [NonSerialized] protected bool m_SkipLayoutUpdate;      //是否跳过Layout更新，置为true后本帧内有效，执行跳过后立刻置回false。
         [NonSerialized] protected bool m_SkipMaterialUpdate;    //是否跳过材质更新，置为true后本帧内有效，执行跳过后立刻置回false。
 
-        /// <summary>
-        /// Base color of the Graphic.
-        /// </summary>
-        /// <remarks>
-        /// The builtin UI Components use this as their vertex color. Use this to fetch or change the Color of visual UI elements, such as an Image.
-        /// </remarks>
-        /// <example>
-        /// <code>
-        /// //Place this script on a GameObject with a Graphic component attached e.g. a visual UI element (Image).
-        ///
-        /// using UnityEngine;
-        /// using UnityEngine.UI;
-        ///
-        /// public class Example : MonoBehaviour
-        /// {
-        ///     Graphic m_Graphic;
-        ///     Color m_MyColor;
-        ///
-        ///     void Start()
-        ///     {
-        ///         //Fetch the Graphic from the GameObject
-        ///         m_Graphic = GetComponent<Graphic>();
-        ///         //Create a new Color that starts as red
-        ///         m_MyColor = Color.red;
-        ///         //Change the Graphic Color to the new Color
-        ///         m_Graphic.color = m_MyColor;
-        ///     }
-        ///
-        ///     // Update is called once per frame
-        ///     void Update()
-        ///     {
-        ///         //When the mouse button is clicked, change the Graphic Color
-        ///         if (Input.GetKey(KeyCode.Mouse0))
-        ///         {
-        ///             //Change the Color over time between blue and red while the mouse button is pressed
-        ///             m_MyColor = Color.Lerp(Color.red, Color.blue, Mathf.PingPong(Time.time, 1));
-        ///         }
-        ///         //Change the Graphic Color to the new Color
-        ///         m_Graphic.color = m_MyColor;
-        ///     }
-        /// }
-        /// </code>
-        /// </example>
+        // Base color of the Graphic.
+        // The builtin UI Components use this as their vertex color. Use this to fetch or change the Color of visual UI elements, such as an Image.
+        // Place this script on a GameObject with a Graphic component attached e.g. a visual UI element (Image).
+        // 图形的基本颜色。
+        // 内置的UI组件使用这个作为他们的顶点颜色（OnPopulateMesh中创建顶点时使用）。可以使用它来获取或更改可视化UI元素的颜色，例如Image。
+        // 
         public virtual Color color { get { return m_Color; } set { if (SetPropertyUtility.SetColor(ref m_Color, value)) SetVerticesDirty(); } }
 
         [SerializeField] private bool m_RaycastTarget = true;   //是否作为射线检测目标
@@ -633,7 +596,7 @@ namespace UnityEngine.UI
         private void DoMeshGeneration()
         {
             if (rectTransform != null && rectTransform.rect.width >= 0 && rectTransform.rect.height >= 0)
-                OnPopulateMesh(s_VertexHelper);
+                OnPopulateMesh(s_VertexHelper  );
             else
                 s_VertexHelper.Clear(); // clear the vertex helper so invalid graphics dont draw.
 
