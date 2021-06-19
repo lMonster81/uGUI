@@ -134,6 +134,7 @@ namespace UnityEngine.UI
 
         // Find the correct RectMask2D for a given IClippable.
         // 为给定的 IClippable 查找其正确的 RectMask2D。
+        // 正确指：实际对其遮罩的RectMask2D。（中间未穿插“使用独立绘制顺序”的 Canvas）
         // 1、取 clippable 所有的父 RectMask2D 组件。
         // 2、若不存在返回 null。
         // 3、开始遍历查找。
