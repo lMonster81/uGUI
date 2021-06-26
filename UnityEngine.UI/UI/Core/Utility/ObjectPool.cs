@@ -9,9 +9,9 @@ namespace UnityEngine.UI
         private readonly UnityAction<T> m_ActionOnGet;
         private readonly UnityAction<T> m_ActionOnRelease;
 
-        public int countAll { get; private set; }
-        public int countActive { get { return countAll - countInactive; } }
-        public int countInactive { get { return m_Stack.Count; } }
+        public int countAll { get; private set; }           //创建出的元素总数
+        public int countActive { get { return countAll - countInactive; } } //池外元素数量
+        public int countInactive { get { return m_Stack.Count; } }  //池中元素数量
 
         public ObjectPool(UnityAction<T> actionOnGet, UnityAction<T> actionOnRelease)
         {
@@ -19,30 +19,32 @@ namespace UnityEngine.UI
             m_ActionOnRelease = actionOnRelease;
         }
 
+        //从池中取出元素
         public T Get()
         {
             T element;
             if (m_Stack.Count == 0)
             {
-                element = new T();
-                countAll++;
+                element = new T();          //创建元素
+                countAll++;                 //创建出的元素总数+1
             }
             else
             {
-                element = m_Stack.Pop();
+                element = m_Stack.Pop();    //从池中取出
             }
             if (m_ActionOnGet != null)
-                m_ActionOnGet(element);
+                m_ActionOnGet(element);     //执行取出回调
             return element;
         }
 
+        //元素放回池中
         public void Release(T element)
         {
             if (m_Stack.Count > 0 && ReferenceEquals(m_Stack.Peek(), element))
-                Debug.LogError("Internal error. Trying to destroy object that is already released to pool.");
+                Debug.LogError("Internal error. Trying to destroy object that is already released to pool.");   //尝试放回的元素已在池中
             if (m_ActionOnRelease != null)
-                m_ActionOnRelease(element);
-            m_Stack.Push(element);
+                m_ActionOnRelease(element); //执行放回回调
+            m_Stack.Push(element);          //放回池中
         }
     }
 }

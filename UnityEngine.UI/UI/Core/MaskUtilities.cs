@@ -73,7 +73,8 @@ namespace UnityEngine.UI
         }
 
         // Find the stencil depth for a given element.
-        // 通过给定的元素计算模板测试深度。 深度指：有效的 Mask 嵌套的层数。第一层为0。
+        // 通过给定的元素计算模板测试深度。 （元素在第几层有效 Mask 之下）
+        // 若不在 Mask 之下，返回0， 否则返回 1~X。
         // 参数"transform"：The starting transform to search.  开始搜索的 Transform。
         // 参数"stopAfter"：Where the search of parents should stop. 结束搜索的 Transform。
         public static int GetStencilDepth(Transform transform, Transform stopAfter)

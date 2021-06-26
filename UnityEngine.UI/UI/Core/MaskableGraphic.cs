@@ -93,6 +93,10 @@ namespace UnityEngine.UI
             // 如果我们有一个启用的 Mask 组件，那么它将生成 Mask 材质。
             // 这是一个优化，但它增加了一些组件间的耦合:(
             // 这里的优化指：引入 StencilMaterial 类，对模板测试材质进行缓存管理。
+            // ----------------------------------------------------
+            // m_StencilValue > 0 表示：它是某个 Mask 的子物体。
+            // maskComponent == null || !maskComponent.IsActive() 表示：它本身不是一个有效的子级 Mask。
+            // 此时 它应该使用一个被 Mask 影响的材质。
             Mask maskComponent = GetComponent<Mask>();
             if (m_StencilValue > 0 && (maskComponent == null || !maskComponent.IsActive()))
             {
