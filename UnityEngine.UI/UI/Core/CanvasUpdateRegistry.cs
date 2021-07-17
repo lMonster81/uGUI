@@ -171,7 +171,7 @@ namespace UnityEngine.UI
             }
 
             for (int i = 0; i < m_LayoutRebuildQueue.Count; ++i)
-                m_LayoutRebuildQueue[i].LayoutComplete();               //触发 LayoutComplete 事件。
+                m_LayoutRebuildQueue[i].LayoutComplete();               //触发 LayoutComplete 事件。将用完的 LayoutRebuilder 放回对象池。
 
             instance.m_LayoutRebuildQueue.Clear();  //清空 LayoutRebuild 队列。
             m_PerformingLayoutUpdate = false;       //标记为不在进行 LayoutUpdate（结束）。

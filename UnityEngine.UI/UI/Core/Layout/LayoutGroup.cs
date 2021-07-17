@@ -52,19 +52,19 @@ namespace UnityEngine.UI
         // ILayoutElement Interface
         public virtual void CalculateLayoutInputHorizontal()
         {
-            m_RectChildren.Clear();
-            var toIgnoreList = ListPool<Component>.Get();
-            for (int i = 0; i < rectTransform.childCount; i++)
+            m_RectChildren.Clear(); //计算前先清理上次计算的子 RectTransform 列表
+            var toIgnoreList = ListPool<Component>.Get(); 
+            for (int i = 0; i < rectTransform.childCount; i++)  //遍历子物体
             {
                 var rect = rectTransform.GetChild(i) as RectTransform;
                 if (rect == null || !rect.gameObject.activeInHierarchy)
                     continue;
 
-                rect.GetComponents(typeof(ILayoutIgnorer), toIgnoreList);
+                rect.GetComponents(typeof(ILayoutIgnorer), toIgnoreList);   //取实现了 ILayoutIgnorer 接口的子物体列表
 
                 if (toIgnoreList.Count == 0)
                 {
-                    m_RectChildren.Add(rect);
+                    m_RectChildren.Add(rect);   //将没有实现 ILayoutIgnorer 接口的子物体加入 m_RectChildren。
                     continue;
                 }
 
@@ -73,7 +73,7 @@ namespace UnityEngine.UI
                     var ignorer = (ILayoutIgnorer)toIgnoreList[j];
                     if (!ignorer.ignoreLayout)
                     {
-                        m_RectChildren.Add(rect);
+                        m_RectChildren.Add(rect); //将实现了 ILayoutIgnorer 接口，但 ignoreLayout 为false 的子物体加入 m_RectChildren。
                         break;
                     }
                 }
