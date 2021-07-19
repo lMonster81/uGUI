@@ -188,27 +188,31 @@ namespace UnityEngine.UI
             ListPool<Component>.Release(components);
         }
 
-        /// <summary>
-        /// Mark the given RectTransform as needing it's layout to be recalculated during the next layout pass.
-        /// </summary>
-        /// <param name="rect">Rect to rebuild.</param>
+        // Mark the given RectTransform as needing it's layout to be recalculated during the next layout pass.
+        // 将给定的 RectTransform 标记为“需要在下一次布局阶段重新计算它的布局”。
+        // ---------------------------------------------------------
+        // 注意：
+        // 1、会先用给定的 RectTransform 找到其 layoutRoot（嵌套 LayoutGroup 的最顶层布局控制器），然后将该 layoutRoot 注册入 CanvasUpdateRegistry，等待Canvas更新时重建。
+        // 2、传入元素应该是某布局控制器（实现ILayoutController）的子元素或自身（否则也没有任何更新布局的意义）。
+        // 3、嵌套 LayoutGroup 下的任意元素变化，都会标记 layoutRoot （嵌套 LayoutGroup 的最顶层布局控制器）。
         public static void MarkLayoutForRebuild(RectTransform rect)
         {
             if (rect == null || rect.gameObject == null)
-                return;
+                return; //null 退出
 
             var comps = ListPool<Component>.Get();
             bool validLayoutGroup = true;
-            RectTransform layoutRoot = rect;
-            var parent = layoutRoot.parent as RectTransform;
-            while (validLayoutGroup && !(parent == null || parent.gameObject == null))
+            RectTransform layoutRoot = rect;   //寻找 layoutRoot，从自身开始。
+            var parent = layoutRoot.parent as RectTransform;    //取 layoutRoot 的 parent
+            while (validLayoutGroup && !(parent == null || parent.gameObject == null))  //遇到无效的 LayoutGroup，或无效的父物体时退出
             {
                 validLayoutGroup = false;
-                parent.GetComponents(typeof(ILayoutGroup), comps);
+                parent.GetComponents(typeof(ILayoutGroup), comps);  // 取所有实现了 ILayoutGroup 接口的组件
 
                 for (int i = 0; i < comps.Count; ++i)
                 {
                     var cur = comps[i];
+                    // 若 layoutRoot 拥有实现了 ILayoutGroup 接口的组件，且该组件是 Behaviour 类型，且该组件启用且激活时，则继续。
                     if (cur != null && cur is Behaviour && ((Behaviour)cur).isActiveAndEnabled)
                     {
                         validLayoutGroup = true;
@@ -217,48 +221,56 @@ namespace UnityEngine.UI
                     }
                 }
 
-                parent = parent.parent as RectTransform;
+                parent = parent.parent as RectTransform; //递归向上
             }
 
             // We know the layout root is valid if it's not the same as the rect,
             // since we checked that above. But if they're the same we still need to check.
+            // 我们知道如果 layoutRoot 与 RectTransform 不相同，那么它就是有效的。因为我们在上面检查过了。
+            // 但如果是相同的，我们还是要检查一下（最后一次没有检查parent）。
+            // -----------------------------------------------------------------------
+            // 如果 layoutRoot 是自身，且是无效的布局控制器 则退出。
             if (layoutRoot == rect && !ValidController(layoutRoot, comps))
             {
                 ListPool<Component>.Release(comps);
                 return;
             }
 
-            MarkLayoutRootForRebuild(layoutRoot);
+            MarkLayoutRootForRebuild(layoutRoot); //将 layoutRoot 标记为待更新
             ListPool<Component>.Release(comps);
         }
 
+        // 是否是有效的布局控制器
         private static bool ValidController(RectTransform layoutRoot, List<Component> comps)
         {
+            //若 layoutRoot 为null，返回无效
             if (layoutRoot == null || layoutRoot.gameObject == null)
-                return false;
+                return false; 
 
-            layoutRoot.GetComponents(typeof(ILayoutController), comps);
+            layoutRoot.GetComponents(typeof(ILayoutController), comps); // 取所有实现了 ILayoutController 接口的组件
             for (int i = 0; i < comps.Count; ++i)
             {
                 var cur = comps[i];
+                // 若 layoutRoot 拥有实现了 ILayoutController 接口的组件，且该组件是 Behaviour 类型，且该组件启用且激活时，返回有效。
                 if (cur != null && cur is Behaviour && ((Behaviour)cur).isActiveAndEnabled)
                 {
-                    return true;
+                    return true; 
                 }
             }
-
+            
             return false;
         }
 
+        // 将 layoutRoot 注册入 CanvasUpdateRegistry，等待Canvas更新时重建
         private static void MarkLayoutRootForRebuild(RectTransform controller)
         {
             if (controller == null)
                 return;
 
-            var rebuilder = s_Rebuilders.Get();
-            rebuilder.Initialize(controller);
-            if (!CanvasUpdateRegistry.TryRegisterCanvasElementForLayoutRebuild(rebuilder))
-                s_Rebuilders.Release(rebuilder);
+            var rebuilder = s_Rebuilders.Get(); //从池中取出一个 LayoutRebuilder
+            rebuilder.Initialize(controller); //初始化（与RectTransform关联）
+            if (!CanvasUpdateRegistry.TryRegisterCanvasElementForLayoutRebuild(rebuilder)) //注册入 CanvasUpdateRegistry，等待Canvas更新时重建
+                s_Rebuilders.Release(rebuilder); //若已加入则回收当前 LayoutRebuilder
         }
 
         public void LayoutComplete()
