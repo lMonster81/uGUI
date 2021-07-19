@@ -97,7 +97,7 @@ namespace UnityEngine.UI
 
     // ILayoutGroup is an ILayoutController that should drive the RectTransforms of its children.
     // ILayoutGroup derives from ILayoutController and requires the same members to be implemented.
-    // ILayoutGroup 是一个 ILayoutController，它应该驱动其子类的 RectTransforms。
+    // ILayoutGroup 是一个 ILayoutController，它应该驱动其子 RectTransforms。
     // ILayoutGroup 派生自 ILayoutController，需要实现相同的成员。
     public interface ILayoutGroup : ILayoutController
     {
