@@ -135,7 +135,9 @@ namespace UnityEngine.UI
         }
 
         // 重写 UIBehaviour 的方法
-        //疑问？？？ 为什么OnEnable中用SetDirty(); 而这里直接调用 LayoutRebuilder.MarkLayoutForRebuild(rectTransform)
+        // 疑问？？？
+        // 为什么OnEnable中用SetDirty(); 而这里直接调用 LayoutRebuilder.MarkLayoutForRebuild(rectTransform)
+        // 估计是因为 OnDisable 时铁定要立即标记为需要重新布局
         protected override void OnDisable()
         {
             m_Tracker.Clear(); //清除DrivenRectTransformTracker对子元素的控制
@@ -243,30 +245,34 @@ namespace UnityEngine.UI
             if (rect == null)
                 return;
 
-            // 驱动锚点和位置
+            // 驱动子物体的锚点和位置
             m_Tracker.Add(this, rect,
                 DrivenTransformProperties.Anchors |
                 (axis == 0 ? DrivenTransformProperties.AnchoredPositionX : DrivenTransformProperties.AnchoredPositionY));
 
             // Inlined rect.SetInsetAndSizeFromParentEdge(...) and refactored code in order to multiply desired size by scaleFactor.
             // sizeDelta must stay the same but the size used in the calculation of the position must be scaled by the scaleFactor.
-            // 
+            // 内联 rect.SetInsetAndSizeFromParentEdge(…) 并且 重构代码，以便将所需的大小乘以scaleFactor。  
+            // sizelta 必须保持不变，但在计算位置时使用的大小必须由scaleFactor缩放。
 
+            // 强制设置锚点为左上
             rect.anchorMin = Vector2.up;
             rect.anchorMax = Vector2.up;
 
+            // 设置子物体位置
+            // x轴：初始位置+宽度*中心点偏移*缩放系数 (x轴是向正方向)(从左上到右下)
+            // y轴：-初始位置-宽度*(1-中心点偏移)*缩放系数 (y轴是向负方向)(从左上到右下)
             Vector2 anchoredPosition = rect.anchoredPosition;
             anchoredPosition[axis] = (axis == 0) ? (pos + rect.sizeDelta[axis] * rect.pivot[axis] * scaleFactor) : (-pos - rect.sizeDelta[axis] * (1f - rect.pivot[axis]) * scaleFactor);
             rect.anchoredPosition = anchoredPosition;
         }
 
-        /// <summary>
-        /// Set the position and size of a child layout element along the given axis.
-        /// </summary>
-        /// <param name="rect">The RectTransform of the child layout element.</param>
-        /// <param name="axis">The axis to set the position and size along. 0 is horizontal and 1 is vertical.</param>
-        /// <param name="pos">The position from the left side or top.</param>
-        /// <param name="size">The size.</param>
+        // Set the position and size of a child layout element along the given axis.
+        // 沿给定轴设置子布局元素的位置和大小。  
+        // 参数"rect"：The RectTransform of the child layout element. //子布局元素 RectTransform
+        // 参数"axis"：The axis to set the position and size along. 0 is horizontal and 1 is vertical. //要设置尺寸的轴，0是水平的，1是垂直的。
+        // 参数"pos"：The position from the left side or top. // 从左/上开始的位置
+        // 参数"size"：大小
         protected void SetChildAlongAxis(RectTransform rect, int axis, float pos, float size)
         {
             if (rect == null)
@@ -275,13 +281,12 @@ namespace UnityEngine.UI
             SetChildAlongAxisWithScale(rect, axis, pos, size, 1.0f);
         }
 
-        /// <summary>
-        /// Set the position and size of a child layout element along the given axis.
-        /// </summary>
-        /// <param name="rect">The RectTransform of the child layout element.</param>
-        /// <param name="axis">The axis to set the position and size along. 0 is horizontal and 1 is vertical.</param>
-        /// <param name="pos">The position from the left side or top.</param>
-        /// <param name="size">The size.</param>
+        // Set the position and size of a child layout element along the given axis.
+        // 沿给定轴设置子布局元素的位置和大小。  
+        // 参数"rect"：The RectTransform of the child layout element. //子布局元素 RectTransform
+        // 参数"axis"：The axis to set the position and size along. 0 is horizontal and 1 is vertical. //要设置尺寸的轴，0是水平的，1是垂直的。
+        // 参数"pos"：The position from the left side or top. // 从左/上开始的位置
+        // 参数"size"：大小
         protected void SetChildAlongAxisWithScale(RectTransform rect, int axis, float pos, float size, float scaleFactor)
         {
             if (rect == null)
@@ -298,18 +303,22 @@ namespace UnityEngine.UI
             // Inlined rect.SetInsetAndSizeFromParentEdge(...) and refactored code in order to multiply desired size by scaleFactor.
             // sizeDelta must stay the same but the size used in the calculation of the position must be scaled by the scaleFactor.
 
+            // 强制设置锚点为左上
             rect.anchorMin = Vector2.up;
             rect.anchorMax = Vector2.up;
 
+            // 设置大小为传入的size
             Vector2 sizeDelta = rect.sizeDelta;
             sizeDelta[axis] = size;
             rect.sizeDelta = sizeDelta;
 
+            // 算法同上
             Vector2 anchoredPosition = rect.anchoredPosition;
             anchoredPosition[axis] = (axis == 0) ? (pos + size * rect.pivot[axis] * scaleFactor) : (-pos - size * (1f - rect.pivot[axis]) * scaleFactor);
             rect.anchoredPosition = anchoredPosition;
         }
 
+        //是否最顶层的 LayoutGroup
         private bool isRootLayoutGroup
         {
             get
@@ -333,14 +342,12 @@ namespace UnityEngine.UI
             SetDirty();
         }
 
-        /// <summary>
-        /// Helper method used to set a given property if it has changed.
-        /// </summary>
-        /// <param name="currentValue">A reference to the member value.</param>
-        /// <param name="newValue">The new value.</param>
+        // 帮助方法，用于在给定属性发生更改时设置该属性。
+        // currentValue：A reference to the member value. //成员值的引用
+        // newValue：The new value.  //新值
         protected void SetProperty<T>(ref T currentValue, T newValue)
         {
-            if ((currentValue == null && newValue == null) || (currentValue != null && currentValue.Equals(newValue)))
+            if ((currentValue == null && newValue == null) || (currentValue != null && currentValue.Equals(newValue)))  //过滤无效和未变
                 return;
             currentValue = newValue;
             SetDirty();

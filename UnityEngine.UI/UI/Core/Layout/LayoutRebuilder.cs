@@ -154,7 +154,7 @@ namespace UnityEngine.UI
             ListPool<Component>.Release(components);
         }
 
-        //执行布局计算（即：计算子元素大小）
+        //执行布局计算（即：递归调用子元素计算自身大小属性的方法）
         private void PerformLayoutCalculation(RectTransform rect, UnityAction<Component> action)
         {
             if (rect == null)
