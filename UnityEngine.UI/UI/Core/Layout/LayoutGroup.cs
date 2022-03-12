@@ -312,7 +312,9 @@ namespace UnityEngine.UI
             sizeDelta[axis] = size;
             rect.sizeDelta = sizeDelta;
 
-            // 算法同上
+            // 设置子物体位置
+            // x轴：初始位置+宽度*中心点偏移*缩放系数 (x轴是向正方向)(从左上到右下)
+            // y轴：-初始位置-宽度*(1-中心点偏移)*缩放系数 (y轴是向负方向)(从左上到右下)
             Vector2 anchoredPosition = rect.anchoredPosition;
             anchoredPosition[axis] = (axis == 0) ? (pos + size * rect.pivot[axis] * scaleFactor) : (-pos - size * (1f - rect.pivot[axis]) * scaleFactor);
             rect.anchoredPosition = anchoredPosition;
