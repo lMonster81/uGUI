@@ -2,10 +2,8 @@ using System.Collections.Generic;
 
 namespace UnityEngine.UI
 {
-    /// <summary>
-    /// Abstract base class for HorizontalLayoutGroup and VerticalLayoutGroup to generalize common functionality.
-    /// </summary>
-    ///
+    // Abstract base class for HorizontalLayoutGroup and VerticalLayoutGroup to generalize common functionality.
+    // HorizontalLayoutGroup 和 VerticalLayoutGroup 的抽象基类，用于泛化常用功能。  
     [ExecuteAlways]
     public abstract class HorizontalOrVerticalLayoutGroup : LayoutGroup
     {

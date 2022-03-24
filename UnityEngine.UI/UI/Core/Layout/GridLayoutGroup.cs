@@ -217,7 +217,7 @@ namespace UnityEngine.UI
                 return;
             }
 
-//一、按水平向，计算行列数
+//一、按直观（水平向），计算行列数
             float width = rectTransform.rect.size.x;
             float height = rectTransform.rect.size.y;
 
