@@ -217,7 +217,7 @@ namespace UnityEngine.UI
                 return;
             }
 
-//一、按直观（水平向），计算行列数
+//一、计算直观行列数（自然坐标轴上）
             float width = rectTransform.rect.size.x;
             float height = rectTransform.rect.size.y;
 
@@ -256,8 +256,7 @@ namespace UnityEngine.UI
                     //行数 = 能放下的最大行数
                     cellCountY = Mathf.Max(1, Mathf.FloorToInt((height - padding.vertical + spacing.y + 0.001f) / (cellSize.y + spacing.y)));
             }
-
-
+            
             //UpperLeft = 0,  //左上
             //UpperRight = 1, //右上
             //LowerLeft = 2,  //左下
@@ -265,10 +264,10 @@ namespace UnityEngine.UI
             int cornerX = (int)startCorner % 2;  //0：左， 1右
             int cornerY = (int)startCorner / 2;  //0：上， 1下
 
-//二、沿自定的轴转置，确定真实行列数
-            int cellsPerMainAxis;  //延伸轴上的格子数
-            int actualCellCountX;  //水平方向实际格子数（实际列数）
-            int actualCellCountY;  //竖直方向实际格子数（实际行数）
+//二、行列数约束至合法范围
+            int cellsPerMainAxis;  //沿startAxis轴的格子数
+            int actualCellCountX;  //实际列数
+            int actualCellCountY;  //实际行数
 
             if (startAxis == Axis.Horizontal)
             {

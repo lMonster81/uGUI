@@ -278,7 +278,7 @@ namespace UnityEngine.UI
             if (rect == null)
                 return;
 
-            SetChildAlongAxisWithScale(rect, axis, pos, size, 1.0f);
+            SetChildAlongAxisWithScale(rect, axis, pos, size, 1.0f);   //不考虑元素缩放
         }
 
         // Set the position and size of a child layout element along the given axis.
