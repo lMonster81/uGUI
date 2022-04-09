@@ -166,18 +166,18 @@ namespace UnityEngine.UI
             SetLayoutInputForAxis(minSpace, minSpace, -1, 1);
         }
 
-        // Also see ILayoutElement
+        // Also see ILayoutController
         // Called by the layout system
-        // 实现 ILayoutElement 的方法
+        // 实现 ILayoutController 的方法
         // 由布局系统自动调用
         public override void SetLayoutHorizontal()
         {
             SetCellsAlongAxis(0);
         }
 
-        // Also see ILayoutElement
+        // Also see ILayoutController
         // Called by the layout system
-        // 实现 ILayoutElement 的方法
+        // 实现 ILayoutController 的方法
         // 由布局系统自动调用
         public override void SetLayoutVertical()
         {
@@ -264,7 +264,7 @@ namespace UnityEngine.UI
             int cornerX = (int)startCorner % 2;  //0：左， 1右
             int cornerY = (int)startCorner / 2;  //0：上， 1下
 
-//二、行列数约束至合法范围
+//二、将直观行列数约束至合法范围
             int cellsPerMainAxis;  //沿startAxis轴的格子数
             int actualCellCountX;  //实际列数
             int actualCellCountY;  //实际行数
