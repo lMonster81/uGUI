@@ -2,6 +2,9 @@ using System.Collections.Generic;
 
 namespace UnityEngine.EventSystems
 {
+    /// <summary>
+    /// 管理所有的Raycaster
+    /// </summary>
     internal static class RaycasterManager
     {
         private static readonly List<BaseRaycaster> s_Raycasters = new List<BaseRaycaster>();

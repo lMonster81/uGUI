@@ -11,6 +11,7 @@ namespace UnityEngine.EventSystems
     {
         /// <summary>
         /// Input press tracking.
+        /// 表示是鼠标的左中右键
         /// </summary>
         public enum InputButton
         {
@@ -32,6 +33,7 @@ namespace UnityEngine.EventSystems
 
         /// <summary>
         /// The state of a press for the given frame.
+        /// 当前帧的状态
         /// </summary>
         public enum FramePressState
         {
@@ -47,6 +49,7 @@ namespace UnityEngine.EventSystems
 
             /// <summary>
             /// Button was pressed and released this frame.
+            /// 该帧同时按压和释放
             /// </summary>
             PressedAndReleased,
 
@@ -58,10 +61,12 @@ namespace UnityEngine.EventSystems
 
         /// <summary>
         /// The object that received 'OnPointerEnter'.
+        /// 该GameObject会调用OnPointerEnter接口
         /// </summary>
         public GameObject pointerEnter { get; set; }
 
         // The object that received OnPointerDown
+        //该GameObject会调用OnPointerDown接口
         private GameObject m_PointerPress;
 
         /// <summary>
@@ -89,6 +94,7 @@ namespace UnityEngine.EventSystems
         /// </summary>
         public RaycastResult pointerPressRaycast { get; set; }
 
+        //指针在上面的GameObject
         public List<GameObject> hovered = new List<GameObject>();
 
         /// <summary>

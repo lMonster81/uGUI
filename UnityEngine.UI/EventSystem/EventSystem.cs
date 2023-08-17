@@ -61,6 +61,7 @@ namespace UnityEngine.EventSystems
 
         /// <summary>
         /// The soft area for dragging in pixels.
+        /// 开始拖动的阈值，小于这个阈值不会被认为是拖动
         /// </summary>
         public int pixelDragThreshold
         {
@@ -80,6 +81,7 @@ namespace UnityEngine.EventSystems
 
         /// <summary>
         /// Only one object can be selected at a time. Think: controller-selected button.
+        /// 场景默认选中的对象，比如ps5进去会默认选中一个
         /// </summary>
         public GameObject firstSelectedGameObject
         {
@@ -89,6 +91,7 @@ namespace UnityEngine.EventSystems
 
         /// <summary>
         /// The GameObject currently considered active by the EventSystem.
+        /// 当前场景中选中的对象
         /// </summary>
         public GameObject currentSelectedGameObject
         {
@@ -144,6 +147,7 @@ namespace UnityEngine.EventSystems
 
         /// <summary>
         /// Set the object as selected. Will send an OnDeselect the the old selected object and OnSelect to the new selected object.
+        /// 设置物体被选中
         /// </summary>
         /// <param name="selected">GameObject to select.</param>
         /// <param name="pointer">Associated EventData.</param>
@@ -169,6 +173,7 @@ namespace UnityEngine.EventSystems
             m_SelectionGuard = false;
         }
 
+        //一个空数据
         private BaseEventData m_DummyData;
         private BaseEventData baseEventDataCache
         {
@@ -199,6 +204,7 @@ namespace UnityEngine.EventSystems
                 if (lhsEventCamera != null && rhsEventCamera != null && lhsEventCamera.depth != rhsEventCamera.depth)
                 {
                     // need to reverse the standard compareTo
+                    //因为Unity的相机是深度小的先进行渲染
                     if (lhsEventCamera.depth < rhsEventCamera.depth)
                         return 1;
                     if (lhsEventCamera.depth == rhsEventCamera.depth)
@@ -207,13 +213,16 @@ namespace UnityEngine.EventSystems
                     return -1;
                 }
 
+                //sortOrder大的优先
                 if (lhs.module.sortOrderPriority != rhs.module.sortOrderPriority)
                     return rhs.module.sortOrderPriority.CompareTo(lhs.module.sortOrderPriority);
 
+                //renderOrder大的优先
                 if (lhs.module.renderOrderPriority != rhs.module.renderOrderPriority)
                     return rhs.module.renderOrderPriority.CompareTo(lhs.module.renderOrderPriority);
             }
 
+            // sortingLayer大的优先
             if (lhs.sortingLayer != rhs.sortingLayer)
             {
                 // Uses the layer value to properly compare the relative order of the layers.
@@ -222,16 +231,20 @@ namespace UnityEngine.EventSystems
                 return rid.CompareTo(lid);
             }
 
+            //sortingOrder大的优先
             if (lhs.sortingOrder != rhs.sortingOrder)
                 return rhs.sortingOrder.CompareTo(lhs.sortingOrder);
 
+            //同一个raycast下，深度大的优先
             // comparing depth only makes sense if the two raycast results have the same root canvas (case 912396)
             if (lhs.depth != rhs.depth && lhs.module.rootRaycaster == rhs.module.rootRaycaster)
                 return rhs.depth.CompareTo(lhs.depth);
 
+            //距离大的优先
             if (lhs.distance != rhs.distance)
                 return lhs.distance.CompareTo(rhs.distance);
 
+            //最后才是序号
             return lhs.index.CompareTo(rhs.index);
         }
 
@@ -245,6 +258,7 @@ namespace UnityEngine.EventSystems
         public void RaycastAll(PointerEventData eventData, List<RaycastResult> raycastResults)
         {
             raycastResults.Clear();
+            //所有的Raycaster都要执行一次
             var modules = RaycasterManager.GetRaycasters();
             for (int i = 0; i < modules.Count; ++i)
             {

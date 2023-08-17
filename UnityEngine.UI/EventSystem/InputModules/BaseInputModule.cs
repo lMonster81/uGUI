@@ -108,6 +108,7 @@ namespace UnityEngine.EventSystems
 
         /// <summary>
         /// Process the current tick for the module.
+        /// 每帧由EventSystem调用
         /// </summary>
         public abstract void Process();
 
@@ -164,6 +165,7 @@ namespace UnityEngine.EventSystems
 
         /// <summary>
         /// Given 2 GameObjects, return a common root GameObject (or null).
+        /// 寻找公共的父结点
         /// </summary>
         /// <param name="g1">GameObject to compare</param>
         /// <param name="g2">GameObject to compare</param>
@@ -191,6 +193,7 @@ namespace UnityEngine.EventSystems
         // walk up the tree till a common root between the last entered and the current entered is foung
         // send exit events up to (but not inluding) the common root. Then send enter events up to
         // (but not including the common root).
+        //处理鼠标移入物体移出物体的事件
         protected void HandlePointerExitAndEnter(PointerEventData currentPointerData, GameObject newEnterTarget)
         {
             // if we have no target / pointerEnter has been deleted
@@ -211,6 +214,7 @@ namespace UnityEngine.EventSystems
             }
 
             // if we have not changed hover target
+            //没有变化
             if (currentPointerData.pointerEnter == newEnterTarget && newEnterTarget)
                 return;
 

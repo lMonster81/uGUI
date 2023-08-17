@@ -29,6 +29,7 @@ namespace UnityEngine.EventSystems
         /// </summary>
         public const int kFakeTouchesId = -4;
 
+        //Touch id 对 对应的PointerEventData
         protected Dictionary<int, PointerEventData> m_PointerData = new Dictionary<int, PointerEventData>();
 
         /// <summary>
@@ -133,6 +134,9 @@ namespace UnityEngine.EventSystems
             return PointerEventData.FramePressState.NotChanged;
         }
 
+        /// <summary>
+        /// 按钮的状态
+        /// </summary>
         protected class ButtonState
         {
             private PointerEventData.InputButton m_Button = PointerEventData.InputButton.Left;
@@ -152,8 +156,12 @@ namespace UnityEngine.EventSystems
             private MouseButtonEventData m_EventData;
         }
 
+        /// <summary>
+        /// 鼠标的状态
+        /// </summary>
         protected class MouseState
         {
+            //一般长度为3，存左中右的鼠标状态
             private List<ButtonState> m_TrackedButtons = new List<ButtonState>();
 
             public bool AnyPressesThisFrame()
@@ -206,6 +214,7 @@ namespace UnityEngine.EventSystems
 
         /// <summary>
         /// Information about a mouse button event.
+        /// 鼠标 + 按钮的状态
         /// </summary>
         public class MouseButtonEventData
         {
