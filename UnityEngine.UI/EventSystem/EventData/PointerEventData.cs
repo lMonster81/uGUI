@@ -137,6 +137,7 @@ namespace UnityEngine.EventSystems
 
         /// <summary>
         /// The last time a click event was sent. Used for double click
+        /// 用于双击，上次点击的时间
         /// </summary>
         public float clickTime { get; set; }
 

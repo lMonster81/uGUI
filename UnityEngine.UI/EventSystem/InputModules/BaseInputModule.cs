@@ -220,6 +220,9 @@ namespace UnityEngine.EventSystems
 
             GameObject commonRoot = FindCommonRoot(currentPointerData.pointerEnter, newEnterTarget);
 
+            //下面这里可以试着画图理解
+            //直到旧的和新的的共同父节点为止，如果共同父节点为null，那么就会一直递归调用下去直到null
+            //向上递归调用旧的结点的pointerExit方法
             // and we already an entered object from last time
             if (currentPointerData.pointerEnter != null)
             {
